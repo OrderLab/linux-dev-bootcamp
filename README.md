@@ -29,6 +29,20 @@ $ sudo qemu-system-x86_64 -kernel /boot/vmlinuz-`uname -r`
 The missing part is a root file system, which we need to create.
  
 Basically, we will create an empty QEMU image first, then format it to an ext2 file system, mount the image file to a temporary directory, and then install a Debian 10 (buster) distribution into the temporary directory using a tool called debootstrap (https://manpages.debian.org/unstable/debootstrap/debootstrap.8.en.html). We use Debian as the base system because it is stable and only contains the essential files, compared to a feature-rich Ubuntu system (debootstrap can also install an Ubuntu image if needed). 
+
+##### Rootfs Setup Script
+
+A root fs bootstrap script is provided, which will automatically create a 
+debian buster based root file system with the setup for user accounts, 
+network, common packages, etc.
+
+The usage is simply: `./bootstrap.sh [image_file] [mount_dir]`
+
+```bash
+$ ./bootstrap.sh my-linux.img qemu-mount.dir
+```
+
+##### Manual Rootfs Setup
  
  
 ```bash
@@ -43,8 +57,19 @@ Before we unmount the directory, we should first set the root user password and 
  
 ```bash
 $ echo 'root:root' | sudo chroot qemu-mount.dir chpasswd
-$ sudo chroot qemu-mount.dir 
-# adduser ryan 
+$ sudo chroot qemu-mount.dir /bin/bash -c "useradd $USER -m -s /bin/bash
+$ echo "$USER:$USER" | sudo chroot qemu-mount.dir chpasswd
+```
+
+**Update hostname, hostsfile and network interfaces**
+
+```bash
+cat << EOF | sudo chroot qemu-mount.dir
+echo debian-buster > /etc/hostname
+sed -i "2i127.0.1.1 debian-buster" /etc/hosts
+echo "auto lo" >> /etc/network/interfaces
+echo "iface lo inet loopback" >> /etc/network/interfaces
+EOF
 ```
  
 **Remount root filesystem as writable**
@@ -53,6 +78,52 @@ $ sudo chroot qemu-mount.dir
 $ cat << EOF | sudo tee "qemu-mount.dir/etc/fstab"
 /dev/sda / ext4 errors=remount-ro,acl 0 1
 EOF
+```
+
+**Install Common Packages**
+
+Common packages like `ssh` and `sudo` are not installed in the default Debian 
+image. We will need to use `apt-get` to install them. The packages can be 
+installed in the jailed (chroot) environment through the host without booting
+the VM image. 
+
+To do so, however, we cannot simply execute `chroot` and then `apt-get` at 
+this point. We need to mount device files and proc from the host OS **temporarily**.
+
+```bash
+sudo mount -o bind,ro /dev qemu-mount.dir/dev
+sudo mount -o bind,ro /dev/pts qemu-mount.dir/dev/pts
+sudo mount -t proc none qemu-mount.dir/proc
+```
+
+Note that we mount the /dev as read-only to prevent the jailed commands 
+from modifying the device files in some scenarios.
+
+Now we can install the packages through two ways: 
+
+1. Interactive shell:
+
+```bash
+sudo LANG=C.UTF-8 chroot /bin/bash --login
+```
+
+2. Command line (script):
+
+```bash
+cat << EOF | sudo LANG=C.UTF-8 chroot qemu-mount.dir
+apt-get update
+apt-get install -y sudo ssh
+apt-get install -y ifupdown net-tools network-manager
+apt-get install -y curl wget
+EOF
+```
+
+**Unmount the device files and proc**
+
+```bash
+sudo umount qemu-mount.dir/dev/pts
+sudo umount qemu-mount.dir/dev
+sudo umount qemu-mount.dir/proc
 ```
  
 **Unmount the image directory**
