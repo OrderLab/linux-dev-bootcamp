@@ -1,5 +1,12 @@
 #!/bin/bash
 
+#
+# Copyright (c) 2021, Johns Hopkins University - Order Lab.
+#
+#    All rights reserved.
+#    Licensed under the Apache License, Version 2.0 (the "License");
+#
+
 if [ $# -ne 2 ]; then
   echo "Usage: $0 IMAGE_FILE MOUNT_DIR"
   exit 1
