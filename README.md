@@ -3,7 +3,9 @@
 ## Virtual Machine Dev Environment 
 
 
-### 1. QEMU (recommended): 
+Recommended to use either QEMU or KVM directly.
+
+### Choice 1: QEMU 
  
 Reference:
 
@@ -131,14 +133,61 @@ sudo umount qemu-mount.dir/proc
 ```bash
 $ sudo umount qemu-mount.dir
 ```
+
+### Choice 2: KVM
+
+Your username must be in the `libvirt` group. If not, add the user to the group: `adduser ryan libvirt`.
+
+#### 2.a Customize Preseed File
+Use the pressed file [debian-buster-preseed.cfg](debian-buster-preseed.cfg) in this repo to 
+automate the guest OS installation. Copy and customize it:
+
+```bash
+$ cp debian-buster-preseed.cfg my-preseed.cfg
+$ vim my-preseed.cfg
+```
+
+#### 2.b Download and Mount Guest OS Installation ISO
+
+```bash
+$ wget -O debian-10.9.0-amd64-netinst.iso https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-10.9.0-amd64-netinst.iso
+$ mkdir debian10-amd64
+$ sudo mount -t iso9660 -r -o loop debian-10.9.0-amd64-netinst.iso debian10-amd64
+```
+
+#### 2.c Create Guest VM Image and Install Guest OS
+
+We will perform the installation without GUI and in a non-interactive way:
+
+```bash
+$ qemu-img create -f qcow2 obiwan-dev.qcow2 32G
+$ virt-install --virt-type kvm --name obiwan-dev --os-variant debian10 --location debian10-amd64 --disk path=/dev/loop0,device=cdrom,readonly=on --disk path=obiwan-dev.qcow2,size=32 --initrd-inject=my-preseed.cfg --memory 16384 --vcpus=8 --graphics none --console pty,target_type=serial --extra-args "console=ttyS0" 
+```
+
+The installation beginning will show a couple of error messages like 
+`mount: mounting /dev/vda on /media failed: Invalid argument`. Those 
+are benign errors due to the empty disk image.
+
+If the installation succeeds, the VM will boot into GRUB and you will be able
+to select Debian.
+
+#### 2.d Manage and Login to Guest VM
+
+Use `virsh` to list, start, shutdown, login to the create guest VM.
+
+```bash
+$ virsh list --all
+$ virsh start obiwan-dev
+$ virsh console obiwan-dev
+```
  
-### 2. VirtualBox:
+### Choice 3: VirtualBox
  
 Reference: 
 
 * https://cs4118.github.io/dev-guides/debian-vm-setup.html 
 * https://linuxize.com/post/how-to-install-virtualbox-guest-additions-on-debian-10/ 
- 
+
  
 ## Boot Virtual Machine with Stock Kernel
 
