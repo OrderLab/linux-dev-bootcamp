@@ -3,7 +3,7 @@
 ## Virtual Machine Dev Environment 
 
 
-Recommended to use either QEMU or KVM directly.
+Recommended to use either QEMU or KVM managed by `libvirt`.
 
 ### Choice 1: QEMU 
  
@@ -134,7 +134,11 @@ sudo umount qemu-mount.dir/proc
 $ sudo umount qemu-mount.dir
 ```
 
-### Choice 2: KVM
+### Choice 2: libvirt Managed KVM
+
+The [libvirt](https://wiki.debian.org/libvirt) suite provides management of different vitalization solutions
+including KVM and Xen. It's more handy to control the VM, networking, etc., 
+than typing raw QEMU commands each time.
 
 Your username must be in the `libvirt` group. If not, add the user to the group: `adduser ryan libvirt`.
 
@@ -177,10 +181,98 @@ Use `virsh` to list, start, shutdown, login to the create guest VM.
 
 ```bash
 $ virsh list --all
+ Id    Name                           State
+----------------------------------------------------
+ 7     obiwan-dev                     running
 $ virsh start obiwan-dev
 $ virsh console obiwan-dev
 ```
- 
+
+The last two steps can be combined into one step of `virsh start obiwan-dev --console`.
+
+To gracefully shutdown the VM, run `virsh shutdown obiwan-dev`. If the graceful 
+shutdown is not successful, run `virsh destroy obiwan-dev`. Destroy does *not* 
+delete the virtual disk file. It only powers off the VM. To delete the VM, 
+run `virsh undefine obiwan-dev` and manually delete the disk image file.
+
+#### 2.e Configure Networking
+
+The default bridge networking created by libvirt should work directly for most cases. If 
+not, refer to the manual networking [configuration document](https://wiki.debian.org/KVM#Setting_up_bridge_networking).
+The default NATed, briedged network that libvirt provides is called `default`:
+
+```bash
+$ virsh net-list
+ Name                 State      Autostart     Persistent
+----------------------------------------------------------
+ default              active     yes           yes
+$ virsh net-info default
+Name:           default
+UUID:           02cc5180-60e3-429a-af96-d1e08cb0a8a4
+Active:         yes
+Persistent:     yes
+Autostart:      yes
+Bridge:         virbr0
+$ virsh net-dhcp-leases default
+ Expiry Time          MAC address        Protocol  IP address                Hostname        Client ID or DUID
+-------------------------------------------------------------------------------------------------------------------
+```
+
+A DHCP service is provided to the guest VMs via `dnsmasq`.  The VMs using this network 
+will end up in `192.168.122.1/24` (or `192.168.123.1/24`). This network is not 
+automatically started. To start it use: `virsh net-start default`.
+
+Because the VMs get IPs from the DHCP service, their IPs can change upon reboots 
+or when the DHCP lease expires. As a result, we will need to double check the guest 
+VM ip address each time to ssh into the VM. We can configure the network manager 
+to assign static IP to a VM. 
+
+```bash
+$ virsh dumpxml obiwan-dev | grep -i '<mac'
+$ virsh net-edit default
+```
+
+Add a `<host>` entry to the `<dhcp>` element. Use the VM MAC address from the `virsh dumpxml` 
+command in the `mac` field and any static IP in the range to assign to the VM.
+
+```xml
+    ...
+    <dhcp>
+      <range start='192.168.123.2' end='192.168.123.254'/>
+      <host mac='52:54:00:f0:8b:6c' ip='192.168.123.2'/>
+    </dhcp>
+    ...
+```
+
+Then restart the virtual network:
+
+```bash
+$ virsh net-destroy default
+$ virsh net-start default
+```
+
+Now, you can SSH into the guest VM (assuming SSH server is running the credentials
+have been set up correctly) with the static IP: `ssh 192.168.123.2`.
+
+To make it even more conveniently SSH into the guest VM, we would like to 
+directly use the guest VM's hostname. For a single VM, we can modify the 
+`/etc/hosts` file. But more generally, it is recommended to use the 
+libvirt NSS module, which will allow `ssh` to consult `libvirt` with
+guest VM hostname. The usage of this module is simple: follow the
+[NSS module documentation](https://libvirt.org/nss.html). In particular, 
+just add `libvirt` to the `hosts` line into the `/etc/nsswitch.conf` file:
+
+```
+hosts:       files libvirt dns
+```
+
+Now, we can do directly SSH with the VM's hostname:
+
+```bash
+$ ssh obiwan-dev
+```
+
+
 ### Choice 3: VirtualBox
  
 Reference: 
