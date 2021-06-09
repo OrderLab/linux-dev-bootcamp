@@ -3,7 +3,7 @@
 ## Virtual Machine Dev Environment 
 
 
-Recommended to use either QEMU or KVM managed by `libvirt`.
+Recommended to use either raw QEMU or KVM managed by `libvirt`.
 
 ### Choice 1: QEMU 
  
@@ -140,7 +140,13 @@ The [libvirt](https://wiki.debian.org/libvirt) suite provides management of diff
 including KVM and Xen. It's more handy to control the VM, networking, etc., 
 than typing raw QEMU commands each time.
 
-Your username must be in the `libvirt` group. If not, add the user to the group: `adduser ryan libvirt`.
+Install the `libvirt` toolchain:
+
+```bash
+$ sudo apt-get install --no-install-recommends qemu-system libvirt-clients libvirt-daemon-system
+```
+
+Your username must be in the `libvirt` group. If not, add the user to the group: `sudo usermod -aG libvirt ryan`.
 
 #### 2.a Customize Preseed File
 Use the pressed file [debian-buster-preseed.cfg](debian-buster-preseed.cfg) in this repo to 
@@ -164,8 +170,9 @@ $ sudo mount -t iso9660 -r -o loop debian-10.9.0-amd64-netinst.iso debian10-amd6
 We will perform the installation without GUI and in a non-interactive way:
 
 ```bash
-$ qemu-img create -f qcow2 obiwan-dev.qcow2 32G
-$ virt-install --virt-type kvm --name obiwan-dev --os-variant debian10 --location debian10-amd64 --disk path=/dev/loop0,device=cdrom,readonly=on --disk path=obiwan-dev.qcow2,size=32 --initrd-inject=my-preseed.cfg --memory 16384 --vcpus=8 --graphics none --console pty,target_type=serial --extra-args "console=ttyS0" 
+$ proj=obiwan-dev
+$ qemu-img create -f qcow2 $proj.qcow2 32G
+$ virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian10-amd64 --disk path=/dev/loop0,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 --initrd-inject=my-preseed.cfg --memory 16384 --vcpus=8 --graphics none --console pty,target_type=serial --extra-args "console=ttyS0" 
 ```
 
 The installation beginning will show a couple of error messages like 
@@ -183,7 +190,7 @@ Use `virsh` to list, start, shutdown, login to the create guest VM.
 $ virsh list --all
  Id    Name                           State
 ----------------------------------------------------
- 7     obiwan-dev                     running
+ -     obiwan-dev                     shut off
 $ virsh start obiwan-dev
 $ virsh console obiwan-dev
 ```
@@ -194,6 +201,22 @@ To gracefully shutdown the VM, run `virsh shutdown obiwan-dev`. If the graceful
 shutdown is not successful, run `virsh destroy obiwan-dev`. Destroy does *not* 
 delete the virtual disk file. It only powers off the VM. To delete the VM, 
 run `virsh undefine obiwan-dev` and manually delete the disk image file.
+
+Install SSH server, update the VM hostname so that we can SSH into the VM later 
+using the hostname.
+
+```bash
+$ virsh console obiwan-dev
+Connected to domain psbox-dev
+Escape character is ^]
+
+order login: root
+Password:
+Last login: Wed Jun  9 03:53:39 EDT 2021 on ttyS0
+...
+root@order:~# apt-get install openssh-server
+root@order:~# hostnamectl set-hostname obiwan-dev
+```
 
 #### 2.e Configure Networking
 
@@ -249,6 +272,10 @@ Then restart the virtual network:
 ```bash
 $ virsh net-destroy default
 $ virsh net-start default
+$ virsh net-dhcp-leases default
+ Expiry Time          MAC address        Protocol  IP address                Hostname        Client ID or DUID
+-------------------------------------------------------------------------------------------------------------------
+ 2021-06-09 06:10:05  52:54:00:f0:8b:6c  ipv4      192.168.123.2/24          obiwan-dev      ff:00:f0:8b:6c:00:01:00:01:28:52:95:00:52:54:00:f0:8b:6c
 ```
 
 Now, you can SSH into the guest VM (assuming SSH server is running the credentials
@@ -258,12 +285,17 @@ To make it even more conveniently SSH into the guest VM, we would like to
 directly use the guest VM's hostname. For a single VM, we can modify the 
 `/etc/hosts` file. But more generally, it is recommended to use the 
 libvirt NSS module, which will allow `ssh` to consult `libvirt` with
-guest VM hostname. The usage of this module is simple: follow the
-[NSS module documentation](https://libvirt.org/nss.html). In particular, 
-just add `libvirt` to the `hosts` line into the `/etc/nsswitch.conf` file:
+guest VM hostname. 
+
+```bash
+$ sudo apt-get install libnss-libvirt
+```
+
+The usage of this module is simple: follow the [NSS module documentation](https://libvirt.org/nss.html). 
+In particular, just add `libvirt` to the `hosts` line into the `/etc/nsswitch.conf` file:
 
 ```
-hosts:       files libvirt dns
+hosts:          files libvirt dns
 ```
 
 Now, we can do directly SSH with the VM's hostname:
