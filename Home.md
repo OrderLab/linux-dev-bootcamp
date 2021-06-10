@@ -13,3 +13,9 @@ The tutorials in the wiki are a group knowledge base. Members who use the wiki h
 * sharing better ways to perform a task
 * problem troubleshooting, etc.
 * supplementing references with links to good tutorial, documentation, blog that are helpful to read
+
+
+## Chapter
+
+[[Virtual Machine Setup]]
+[[Boot VM Custom Kernel]]
