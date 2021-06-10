@@ -25,7 +25,7 @@ $ sudo apt-get install  debootstrap libguestfs-tools qemu-system-x86
 QEMU can boot a kernel image directly, e.g., 
  
 ```bash
-$ sudo qemu-system-x86_64 -kernel /boot/vmlinuz-`uname -r`
+sudo qemu-system-x86_64 -kernel /boot/vmlinuz-`uname -r`
 ```
  
 The missing part is a root file system, which we need to create.
@@ -41,34 +41,39 @@ network, common packages, etc.
 The usage is simply: `./bootstrap.sh [image_file] [mount_dir]`
 
 ```bash
-$ ./bootstrap.sh my-linux.img qemu-mount.dir
+./bootstrap.sh my-linux.img qemu-mount.dir
 ```
 
 ##### Manual Rootfs Setup
  
  
 ```bash
-$ qemu-img create my-linux.img 4g 
-$ mkfs.ext2 my-linux.img 
-$ mkdir qemu-mount.dir 
-$ sudo mount -o loop  my-linux.img qemu-mount.dir/ 
-$ sudo debootstrap --arch amd64 buster qemu-mount.dir 
+image_file=my-linux.img
+mount_dir=qemu-mount.dir
+new_user=$USER
+new_host=debian-buster
+
+qemu-img create $image_file 8g
+mkfs.ext2 $image_file
+mkdir -p $mount_dir
+sudo mount -o loop  $image_file $mount_dir
+sudo debootstrap --arch amd64 buster $mount_dir
 ```
  
 Before we unmount the directory, we should first set the root user password and create a new user using chroot. Otherwise, the root user is locked by default from Debian 10 and we will not be able to login because the root user is locked and its password is not set.
  
 ```bash
-$ echo 'root:root' | sudo chroot qemu-mount.dir chpasswd
-$ sudo chroot qemu-mount.dir /bin/bash -c "useradd $USER -m -s /bin/bash
-$ echo "$USER:$USER" | sudo chroot qemu-mount.dir chpasswd
+echo 'root:root' | sudo chroot $mount_dir chpasswd
+sudo chroot $mount_dir /bin/bash -c "useradd $new_user -m -s /bin/bash"
+echo "$new_user:$new_user" | sudo chroot $mount_dir chpasswd
 ```
 
 **Update hostname, hostsfile and network interfaces**
 
 ```bash
-cat << EOF | sudo chroot qemu-mount.dir
-echo debian-buster > /etc/hostname
-sed -i "2i127.0.1.1 debian-buster" /etc/hosts
+cat << EOF | sudo chroot $mount_dir
+echo $new_host > /etc/hostname
+sed -i "2i127.0.1.1 $new_host" /etc/hosts
 echo "auto lo" >> /etc/network/interfaces
 echo "iface lo inet loopback" >> /etc/network/interfaces
 EOF
@@ -77,7 +82,7 @@ EOF
 **Remount root filesystem as writable**
  
 ```bash
-$ cat << EOF | sudo tee "qemu-mount.dir/etc/fstab"
+cat << EOF | sudo tee "$mount_dir/etc/fstab"
 /dev/sda / ext4 errors=remount-ro,acl 0 1
 EOF
 ```
@@ -93,9 +98,10 @@ To do so, however, we cannot simply execute `chroot` and then `apt-get` at
 this point. We need to mount device files and proc from the host OS **temporarily**.
 
 ```bash
-sudo mount -o bind,ro /dev qemu-mount.dir/dev
-sudo mount -o bind,ro /dev/pts qemu-mount.dir/dev/pts
-sudo mount -t proc none qemu-mount.dir/proc
+sudo cp /etc/resolv.conf $mount_dir/etc/resolv.conf
+sudo mount -o bind,ro /dev $mount_dir/dev
+sudo mount -o bind,ro /dev/pts $mount_dir/dev/pts
+sudo mount -t proc none $mount_dir/proc
 ```
 
 Note that we mount the /dev as read-only to prevent the jailed commands 
@@ -112,7 +118,7 @@ sudo LANG=C.UTF-8 chroot /bin/bash --login
 2. Command line (script):
 
 ```bash
-cat << EOF | sudo LANG=C.UTF-8 chroot qemu-mount.dir
+cat << EOF | sudo LANG=C.UTF-8 chroot $mount_dir 
 apt-get update
 apt-get install -y sudo ssh
 apt-get install -y ifupdown net-tools network-manager
@@ -123,15 +129,15 @@ EOF
 **Unmount the device files and proc**
 
 ```bash
-sudo umount qemu-mount.dir/dev/pts
-sudo umount qemu-mount.dir/dev
-sudo umount qemu-mount.dir/proc
+sudo umount $mount_dir/dev/pts
+sudo umount $mount_dir/dev
+sudo umount $mount_dir/proc
 ```
  
 **Unmount the image directory**
  
 ```bash
-$ sudo umount qemu-mount.dir
+sudo umount $mount_dir
 ```
 
 ### Choice 2: libvirt Managed KVM
@@ -143,7 +149,7 @@ than typing raw QEMU commands each time.
 Install the `libvirt` toolchain:
 
 ```bash
-$ sudo apt-get install --no-install-recommends qemu-system libvirt-clients libvirt-daemon-system
+sudo apt-get install --no-install-recommends qemu-system libvirt-clients libvirt-daemon-system
 ```
 
 Your username must be in the `libvirt` group. If not, add the user to the group: `sudo usermod -aG libvirt ryan`.
@@ -153,16 +159,16 @@ Use the pressed file [debian-buster-preseed.cfg](debian-buster-preseed.cfg) in t
 automate the guest OS installation. Copy and customize it:
 
 ```bash
-$ cp debian-buster-preseed.cfg my-preseed.cfg
-$ vim my-preseed.cfg
+cp debian-buster-preseed.cfg my-preseed.cfg
+vim my-preseed.cfg
 ```
 
 #### 2.b Download and Mount Guest OS Installation ISO
 
 ```bash
-$ wget -O debian-10.9.0-amd64-netinst.iso https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-10.9.0-amd64-netinst.iso
-$ mkdir debian10-amd64
-$ sudo mount -t iso9660 -r -o loop debian-10.9.0-amd64-netinst.iso debian10-amd64
+wget -O debian-10.9.0-amd64-netinst.iso https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-10.9.0-amd64-netinst.iso
+mkdir debian10-amd64
+sudo mount -t iso9660 -r -o loop debian-10.9.0-amd64-netinst.iso debian10-amd64
 ```
 
 #### 2.c Create Guest VM Image and Install Guest OS
@@ -170,9 +176,13 @@ $ sudo mount -t iso9660 -r -o loop debian-10.9.0-amd64-netinst.iso debian10-amd6
 We will perform the installation without GUI and in a non-interactive way:
 
 ```bash
-$ proj=obiwan-dev
-$ qemu-img create -f qcow2 $proj.qcow2 32G
-$ virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian10-amd64 --disk path=/dev/loop0,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 --initrd-inject=my-preseed.cfg --memory 16384 --vcpus=8 --graphics none --console pty,target_type=serial --extra-args "console=ttyS0" 
+proj=obiwan-dev
+qemu-img create -f qcow2 $proj.qcow2 32G
+
+virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian10-amd64 \
+--disk path=/dev/loop0,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
+--initrd-inject=my-preseed.cfg --memory 16384 --vcpus=8 --graphics none \
+--console pty,target_type=serial --extra-args "console=ttyS0" 
 ```
 
 The installation beginning will show a couple of error messages like 
@@ -288,7 +298,7 @@ libvirt NSS module, which will allow `ssh` to consult `libvirt` with
 guest VM hostname. 
 
 ```bash
-$ sudo apt-get install libnss-libvirt
+sudo apt-get install libnss-libvirt
 ```
 
 The usage of this module is simple: follow the [NSS module documentation](https://libvirt.org/nss.html). 
@@ -301,7 +311,7 @@ hosts:          files libvirt dns
 Now, we can do directly SSH with the VM's hostname:
 
 ```bash
-$ ssh obiwan-dev
+ssh obiwan-dev
 ```
 
 
@@ -320,13 +330,15 @@ Reference:
 #### With graphic window (if running locally):
  
 ```bash
-$ sudo qemu-system-x86_64 -kernel /boot/vmlinuz-`uname -r` -hda my-linux.img -append "root=/dev/sda single" 
+sudo qemu-system-x86_64 -kernel /boot/vmlinuz-`uname -r` -hda my-linux.img \
+-append "root=/dev/sda single" 
 ```
  
 #### Text-mode (if running in remote server):
  
 ```bash
-$ sudo qemu-system-x86_64 -kernel /boot/vmlinuz-`uname -r` -hda my-linux.img -append "root=/dev/sda single console=ttyS0" --nographic
+sudo qemu-system-x86_64 -kernel /boot/vmlinuz-`uname -r` -hda my-linux.img \
+-append "root=/dev/sda single console=ttyS0" --nographic
 ```
  
 After the system boots up, use the root user login (password is “root”) or press Ctrl-D to login with the new user created in the previous step.
@@ -344,7 +356,7 @@ Reference:
 ### Install Toolchain
  
 ```bash
-$ sudo apt-get install libncurses5-dev gcc make git exuberant-ctags bc libssl-dev
+sudo apt-get install libncurses5-dev gcc make git exuberant-ctags bc libssl-dev
 ```
  
 Try to build the kernel on a host with similar kernel versions
@@ -353,8 +365,8 @@ Try to build the kernel on a host with similar kernel versions
  
  
 ```bash
-$ wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.4.86.tar.xz 
-$ tar xvf linux-5.4.86.tar.xz
+wget https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.4.86.tar.xz 
+tar xvf linux-5.4.86.tar.xz
 ```
  
 ### Kernel Config  
@@ -362,28 +374,29 @@ $ tar xvf linux-5.4.86.tar.xz
 If the host kernel version is similar to the built kernel, then copy the host build config:
  
 ```bash
-$ cp /boot/config-`uname -r`* linux-5.4.86/.config 
+cp /boot/config-`uname -r`* linux-5.4.86/.config 
 ```
  
 Otherwise, generate a basic config:
  
 ```bash
-$ cd linux-5.4.86
-$ make x86_64_defconfig
-$ make kvm_guest.config 
+cd linux-5.4.86
+make x86_64_defconfig
+make kvm_guest.config 
 ```
 
 ### Compile
 
 ```bash
-$ make -j16 
+make -j16 
 ```
  
 ## Boot VM with Custom Kernel
  
 ```bash
-$ cd linux-5.4.86
-$ sudo qemu-system-x86_64 -kernel arch/x86/boot/bzImage  -hda ../my-linux.img -append "root=/dev/sda console=ttyS0" -m 2G --nographic
+cd linux-5.4.86
+sudo qemu-system-x86_64 -kernel arch/x86/boot/bzImage  -hda ../my-linux.img \
+-append "root=/dev/sda console=ttyS0" -m 4G --nographic
 ```
  
 ```bash
@@ -407,7 +420,8 @@ root@razor5:~#
 KVM can significantly accelerate the boot time.
  
 ```bash
-$ sudo qemu-system-x86_64 -kernel arch/x86/boot/bzImage  -hda ../my-linux.img -append "root=/dev/sda console=ttyS0" --enable-kvm -m 2G --nographic
+sudo qemu-system-x86_64 -kernel arch/x86/boot/bzImage  -hda ../my-linux.img \
+-append "root=/dev/sda console=ttyS0" --enable-kvm -m 4G --nographic
 ```
  
 ## Enable Network
@@ -431,9 +445,9 @@ root@razor5:~# shutdown now
 #### Remount the system image
  
 ```bash
-$ sudo mount -o loop  my-linux.img qemu-mount.dir/
+sudo mount -o loop  my-linux.img qemu-mount.dir/
  
-$ cat << EOF | sudo tee "qemu-mount.dir/etc/network/interfaces.d/00mylinux"
+cat << EOF | sudo tee "qemu-mount.dir/etc/network/interfaces.d/00mylinux"
 auto lo
 iface lo inet loopback
 auto enp0s3
