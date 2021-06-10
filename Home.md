@@ -11,5 +11,5 @@ The tutorials in the wiki are a group knowledge base. Members who use the wiki h
 * making the instructions up to date
 * adding new chapters
 * sharing better ways to perform a task
-* problem troubleshotting, etc.
-
+* problem troubleshooting, etc.
+* supplementing references with links to good tutorial, documentation, blog that are helpful to read
