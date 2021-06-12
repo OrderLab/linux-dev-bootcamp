@@ -2,7 +2,7 @@
  
 ```bash
 cd linux-5.4.86
-sudo qemu-system-x86_64 -kernel arch/x86/boot/bzImage  -hda ../my-linux.img \
+qemu-system-x86_64 -kernel arch/x86/boot/bzImage  -hda ../my-linux.img \
 -append "root=/dev/sda console=ttyS0" -m 4G --nographic
 ```
  
@@ -31,3 +31,14 @@ sudo qemu-system-x86_64 -kernel arch/x86/boot/bzImage  -hda ../my-linux.img \
 -append "root=/dev/sda console=ttyS0" --enable-kvm -m 4G --nographic
 ```
  
+### Use QEMU with KVM without `sudo`
+
+If you do not want to risk using `sudo` every time running QEMU, here is a way to run as normal user.
+
+KVM only requires access to `/dev/kvm`, which has owner `root:kvm` and file mode `660`. Add a normal user to the `kvm` group:
+
+```bash
+sudo usermod -a -G kvm `whoami`
+```
+
+User group modification takes effect after logging out and logging in again.

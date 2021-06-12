@@ -5,18 +5,18 @@
 ### With graphic window (if running locally):
  
 ```bash
-sudo qemu-system-x86_64 -kernel /boot/vmlinuz-`uname -r` -hda my-linux.img \
+qemu-system-x86_64 -kernel /boot/vmlinuz-`uname -r` -hda my-linux.img \
 -append "root=/dev/sda single" 
 ```
  
 ### Text-mode (if running in remote server):
  
 ```bash
-sudo qemu-system-x86_64 -kernel /boot/vmlinuz-`uname -r` -hda my-linux.img \
+qemu-system-x86_64 -kernel /boot/vmlinuz-`uname -r` -hda my-linux.img \
 -append "root=/dev/sda single console=ttyS0" --nographic
 ```
  
-After the system boots up, use the root user login (password is “root”) or press Ctrl-D to login with the new user created in the previous step.
+After the system boots up, use the root user login (password is “root”) or press Ctrl-D to login with the new user created in the previous step. To skip typing user name and password every time, see [[Auto-login|Automation#auto-login]].
 
 ## 2. Libvirt
 

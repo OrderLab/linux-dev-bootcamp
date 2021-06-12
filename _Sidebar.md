@@ -5,4 +5,6 @@
 5. [[Configure VM Networking|VM Networking]]
 6. [[Modify Kernel]]
 7. [[Debugging]]
-8. [[References]]
+8. [[Automation]]
+9. [[Troubleshooting]]
+10. [[References]]
