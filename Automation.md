@@ -39,6 +39,33 @@ alias g="gdb vmlinux -ex 'target remote 127.0.0.1:1234' -ex c"
 alias k='killall qemu-system-x86_64'
 ```
 
+### Example `run.sh`
+
+Combined with alias above, use `r -d` to start gdb server.
+
+```bash
+#!/bin/bash
+
+if [[ $1 = '-d' ]]; then
+        DBG='-s -S'  # gdb debug options (port 1234; stop cpu)
+else
+        DBG=
+fi
+# in gdb console, `break start_kernel`
+
+KVM=--enable-kvm
+#KVM=
+
+qemu-system-x86_64 -kernel arch/x86/boot/bzImage \
+    -hda qemu-image.img \
+    -append "root=/dev/sda console=ttyS0 nokaslr" \
+    ${DBG} \
+    ${KVM} \
+    -smp cores=10 -m 4096M \
+    -nographic
+    #-serial stdio -display none
+```
+
 ## Auto-login
 
 To skip typing user name and password in the serial console every time we start QEMU, we can change to auto-login.
