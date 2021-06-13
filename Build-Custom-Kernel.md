@@ -7,7 +7,7 @@ Reference:
 ## Install Toolchain
  
 ```bash
-sudo apt-get install libncurses5-dev gcc make git exuberant-ctags bc libssl-dev flex bison libelf-dev
+sudo apt-get install libncurses5-dev gcc make git exuberant-ctags bc libssl-dev flex bison libelf-dev rsync
 ```
  
 Try to build the kernel on a host with similar kernel versions
@@ -40,4 +40,10 @@ make kvm_guest.config
 
 ```bash
 make -j16 
+```
+
+## Package
+
+```bash
+make -j16 bindeb-pkg
 ```
