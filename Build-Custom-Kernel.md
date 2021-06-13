@@ -7,7 +7,7 @@ Reference:
 ## Install Toolchain
  
 ```bash
-sudo apt-get install libncurses5-dev gcc make git exuberant-ctags bc libssl-dev
+sudo apt-get install libncurses5-dev gcc make git exuberant-ctags bc libssl-dev flex bison
 ```
  
 Try to build the kernel on a host with similar kernel versions
