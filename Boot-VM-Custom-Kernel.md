@@ -63,7 +63,7 @@ Change the `<os>` tag to be like the following:
   </os>
 ```
 
-Then the VM will always boot with the latest `bzImage` compiled in the host.
+Then later with `virsh start obiwan-dev`, the VM will always boot with the latest `bzImage` compiled in the host.
 
 
 
