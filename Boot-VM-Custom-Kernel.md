@@ -45,7 +45,7 @@ User group modification takes effect after logging out and logging in again.
 
 ## Direct kernel boot under `libvirt`
 
-When using `libvirt` to manage the VM, the VM by default boots with the virtual disk's kernel. Testing an updated kernel involves `scp` or share the kernel image to the VM and installing the kernel in the guest. For frequently testing kernel changes, a more efficient way is to 
+When using `libvirt` to manage the VM, the VM by default boots with the virtual disk's kernel. Testing an updated kernel involves `scp` or sharing the kernel image to the VM and installing the kernel in the guest. For frequently testing kernel changes, a more efficient way is to 
 use the direct kernel boot option with the kernel image file on the host.
 
 ```bash
