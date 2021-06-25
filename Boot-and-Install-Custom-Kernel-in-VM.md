@@ -85,7 +85,7 @@ Reboot the VM. Now without specifying the custom kernel in the boot option, you 
 uname -a
 ```
 
-Note after you install the custom kernel, you will likely encounter a loss of VM network after you reboot the VM. Refer to the [troubleshooting page](https://github.com/OrderLab/linux-dev-bootcamp/wiki/Troubleshooting) for how to resolve the issue.
+Note after you install the custom kernel, you will likely encounter a loss of VM network after you reboot the VM. Refer to the [troubleshooting page](https://github.com/OrderLab/linux-dev-bootcamp/wiki/Troubleshooting#loss-of-vm-network-after-installing-new-kernel) for how to resolve the issue.
 
 
 
