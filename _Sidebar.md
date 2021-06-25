@@ -1,7 +1,7 @@
 1. [[Virtual Machine Setup]]
 2. [[Boot VM with Stock Kernel|Boot VM Stock Kernel]]
 3. [[Build Custom Kernel]]
-4. [[Boot VM with Custom Kernel|Boot VM Custom Kernel]]
+4. [[Boot and Install Custom Kernel in VM|Boot and Install Custom Kernel in VM]]
 5. [[Configure VM Networking|VM Networking]]
 6. [[Modify Kernel]]
 7. [[Debugging]]
