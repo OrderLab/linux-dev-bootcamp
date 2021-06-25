@@ -64,6 +64,20 @@ resize2fs qemu-image.img
 
 **Caution for shrinking**: We need to change the above command order for shrinking. File system resizing must be done before resizing disk image.
 
+## Reduce VM image size
+
+The VM image size can grow into an explosive size after a while (e.g., 30+ GB), even though the total data you add to the VM is definitely not that big. This is because of the free space in the VM image is not reclaimed. You can use the `virt-sparsify` tool to reduce the image size, which is easy to use and safe. Please read the man page of `virt-sparsify` first: https://libguestfs.org/virt-sparsify.1.html
+
+**Shut down the VM**, then run the command `virt-sparsify indisk.img outdisk.img`. You should see significantly reduced image size for the `outdisk.img`. Test the new image with QEMU and verify it does not loose data. After you double check it works, you can delete `indisk.img` and rename `outdisk.img` to `indisk.img`.
+
+If the VM image format is `qcow2`, you can further add `--compress` option to compress the large image. 
+
+
+
+
+
+
+
 ## Loss of VM network after installing new kernel
 
 When you install the custom-built kernel for the first time, you will likely encounter a loss of VM network after the VM reboots. The root cause is because the network interface changed with the custom kernel, so you need to update the network configuration to restore the network functionality.
