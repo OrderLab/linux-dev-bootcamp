@@ -21,7 +21,7 @@ The tutorials in the wiki are a group knowledge base. Members who use the wiki h
 1. [[Virtual Machine Setup]]
 2. [[Boot VM with Stock Kernel|Boot VM Stock Kernel]]
 3. [[Build Custom Kernel]]
-4. [[Boot VM with Custom Kernel|Boot and Install Custom Kernel in VM]]
+4. [[Boot and Install Custom Kernel|Boot and Install Custom Kernel in VM]]
 5. [[Configure VM Networking|VM Networking]]
 6. [[Modify Kernel]]
 7. [[Debugging]]
