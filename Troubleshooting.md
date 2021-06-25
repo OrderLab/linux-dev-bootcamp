@@ -63,3 +63,60 @@ resize2fs qemu-image.img
 ```
 
 **Caution for shrinking**: We need to change the above command order for shrinking. File system resizing must be done before resizing disk image.
+
+## Loss of VM network after installing new kernel
+
+When you install the custom-built kernel for the first time, you will likely encounter a loss of VM network after the VM reboots. The root cause is because the network interface changed with the custom kernel, so you need to update the network configuration to restore the network functionality.
+
+#### Symptom
+
+The VM's network interface no longer has an IP address: 
+
+```bash
+$ sudo ifconfig -a
+enp0s2: flags=4098<BROADCAST,MULTICAST>  mtu 1500
+        ether 52:54:00:f0:8b:6c  txqueuelen 1000  (Ethernet)
+        RX packets 0  bytes 0 (0.0 B)
+        RX errors 0  dropped 0  overruns 0  frame 0
+...
+```
+
+On the host, the DHCP lease is also gone:
+
+```bash
+$ virsh net-dhcp-leases default
+ Expiry Time          MAC address        Protocol  IP address                Hostname        Client ID or DUID
+-------------------------------------------------------------------------------------------------------------------
+```
+
+#### Diagnosis
+
+Check the network interface configuration file `/etc/network/interfaces` inside the VM:
+
+```
+...
+allow-hotplug ens2
+iface ens2 inet dhcp
+```
+
+There is an `ens2` in the configuration file, but there is no such interface in the output of `ifconfig -a`. In addition, the `ifconfig -a` shows an interface `enp0s2`, which does not appear in the configuration file. This discrepancy leads to our diagnosis hypothesis that the network interface `ens2` from the VM creation time no longer exists and a new interface `enp0s2` is added with the custom kernel. To validate this hypothesis, simply update the `ens2` in the configuration:
+
+```diff
+- allow-hotplug ens2
+- iface ens2 inet dhcp
++ allow-hotplug enp0s2
++ iface enp0s2 inet dhcp
+```
+
+Reboot the VM, then check the `ifconfig` output:
+
+```bash
+$ sudo ifconfig -a
+enp0s2: flags=4163<UP,BROADCAST,RUNNING,MULTICAST>  mtu 1500
+        inet 192.168.123.2  netmask 255.255.255.0  broadcast 192.168.123.255
+        inet6 fe80::5054:ff:fef0:8b6c  prefixlen 64  scopeid 0x20<link>
+...
+```
+
+It gets assigned with the IP address now.
+
