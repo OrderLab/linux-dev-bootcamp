@@ -1,25 +1,207 @@
 # Virtual Machine Setup
 
 
-It is recommended to use either raw QEMU or KVM managed by `libvirt` for the 
-Linux kernel development. The following instructions are based on Ubuntu 18.04.
+It is recommended to use either `libvirt` management suite or raw QEMU for the Linux kernel development. The following instructions are based on Ubuntu 18.04.
 
-## Choice 1: QEMU 
+
+## Choice 1: libvirt Managed KVM
+
+The [libvirt](https://wiki.debian.org/libvirt) (`virsh`) suite provides management of different vitalization solutions
+including KVM and Xen. It's more handy to control the VM, networking, etc., 
+than typing raw QEMU commands each time.
+
+Install the `libvirt` toolchain:
+
+```bash
+sudo apt-get install --no-install-recommends qemu-system libvirt-clients libvirt-daemon-system
+```
+
+Your username must be in the `libvirt` group. If not, add the user to the group: `sudo usermod -aG libvirt ryan`.
+
+### 1.a Customize Preseed File
+Use the pressed file [debian-buster-preseed.cfg](debian-buster-preseed.cfg) in this repo to 
+automate the guest OS installation. Copy and customize it:
+
+```bash
+mkdir workspace && cd workspace
+git clone git@github.com:OrderLab/linux-dev-bootcamp.git bootcamp
+mkdir vm && cd vm
+cp ../bootcamp/debian-buster-preseed.cfg preseed.cfg
+```
+
+Use an editor to change `preseed.cfg` such as the new user, initial password, hostname. 
+For example, you can change the hostname configuration as follows:
+
+```diff
+- d-i netcfg/get_hostname string order
++ d-i netcfg/get_hostname string obiwan-dev
+```
+
+### 1.b Download and Mount Guest OS Installation ISO
+
+```bash
+wget -O debian-10.9.0-amd64-netinst.iso https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-10.9.0-amd64-netinst.iso
+mkdir debian10-amd64
+sudo mount -t iso9660 -r -o loop debian-10.9.0-amd64-netinst.iso debian10-amd64
+```
+
+### 1.c Create Guest VM Image and Install Guest OS
+
+We will perform the installation without GUI and in a non-interactive way:
+
+```bash
+proj=obiwan-dev
+qemu-img create -f qcow2 $proj.qcow2 32G
+
+virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian10-amd64 \
+--disk path=/dev/loop0,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
+--initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
+--console pty,target_type=serial --extra-args "console=ttyS0" 
+```
+
+The installation beginning will show a couple of error messages like 
+`mount: mounting /dev/vda on /media failed: Invalid argument`. Those 
+are benign errors due to the empty disk image.
+
+If the installation succeeds, the VM will boot into GRUB and you will be able
+to select Debian.
+
+### 1.d Manage and Login to Guest VM
+
+Use `virsh` to list, start, shutdown, login to the create guest VM.
+
+```bash
+$ virsh list --all
+ Id    Name                           State
+----------------------------------------------------
+ -     obiwan-dev                     shut off
+$ virsh start obiwan-dev
+$ virsh console obiwan-dev
+```
+
+The last two steps can be combined into one step of `virsh start obiwan-dev --console`.
+
+To gracefully shutdown the VM, run `virsh shutdown obiwan-dev`. If the graceful 
+shutdown is not successful, run `virsh destroy obiwan-dev`. Destroy does *not* 
+delete the virtual disk file. It only powers off the VM. To delete the VM, 
+run `virsh undefine obiwan-dev` and manually delete the disk image file.
+
+Install SSH server, update the VM hostname so that we can SSH into the VM later 
+using the hostname.
+
+```bash
+$ virsh console obiwan-dev
+Connected to domain psbox-dev
+Escape character is ^]
+
+order login: root
+Password:
+Last login: Wed Jun  9 03:53:39 EDT 2021 on ttyS0
+...
+root@order:~# apt-get install openssh-server
+root@order:~# hostnamectl set-hostname obiwan-dev
+```
+
+### 1.e Configure Networking
+
+The default bridge networking created by libvirt should work directly for most cases. If 
+not, refer to the manual networking [configuration document](https://wiki.debian.org/KVM#Setting_up_bridge_networking).
+The default NATed, briedged network that libvirt provides is called `default`:
+
+```bash
+$ virsh net-list
+ Name                 State      Autostart     Persistent
+----------------------------------------------------------
+ default              active     yes           yes
+$ virsh net-info default
+Name:           default
+UUID:           02cc5180-60e3-429a-af96-d1e08cb0a8a4
+Active:         yes
+Persistent:     yes
+Autostart:      yes
+Bridge:         virbr0
+$ virsh net-dhcp-leases default
+ Expiry Time          MAC address        Protocol  IP address                Hostname        Client ID or DUID
+-------------------------------------------------------------------------------------------------------------------
+```
+
+A DHCP service is provided to the guest VMs via `dnsmasq`.  The VMs using this network 
+will end up in `192.168.122.1/24` (or `192.168.123.1/24`). This network is not 
+automatically started. To start it use: `virsh net-start default`.
+
+Because the VMs get IPs from the DHCP service, their IPs can change upon reboots 
+or when the DHCP lease expires. As a result, we will need to double check the guest 
+VM ip address each time to ssh into the VM. We can configure the network manager 
+to assign static IP to a VM. 
+
+```bash
+$ virsh dumpxml obiwan-dev | grep -i '<mac'
+$ virsh net-edit default
+```
+
+Add a `<host>` entry to the `<dhcp>` element. Use the VM MAC address from the `virsh dumpxml` 
+command in the `mac` field and any static IP in the range to assign to the VM.
+
+```xml
+    ...
+    <dhcp>
+      <range start='192.168.123.2' end='192.168.123.254'/>
+      <host mac='52:54:00:f0:8b:6c' ip='192.168.123.2'/>
+    </dhcp>
+    ...
+```
+
+Then restart the virtual network:
+
+```bash
+$ virsh net-destroy default
+$ virsh net-start default
+$ virsh net-dhcp-leases default
+ Expiry Time          MAC address        Protocol  IP address                Hostname        Client ID or DUID
+-------------------------------------------------------------------------------------------------------------------
+ 2021-06-09 06:10:05  52:54:00:f0:8b:6c  ipv4      192.168.123.2/24          obiwan-dev      ff:00:f0:8b:6c:00:01:00:01:28:52:95:00:52:54:00:f0:8b:6c
+```
+
+Now, you can SSH into the guest VM (assuming SSH server is running the credentials
+have been set up correctly) with the static IP: `ssh 192.168.123.2`.
+
+To make it even more conveniently SSH into the guest VM, we would like to 
+directly use the guest VM's hostname. For a single VM, we can modify the 
+`/etc/hosts` file. But more generally, it is recommended to use the 
+libvirt NSS module, which will allow `ssh` to consult `libvirt` with
+guest VM hostname. 
+
+```bash
+sudo apt-get install libnss-libvirt
+```
+
+The usage of this module is simple: follow the [NSS module documentation](https://libvirt.org/nss.html). 
+In particular, just add `libvirt` to the `hosts` line into the `/etc/nsswitch.conf` file:
+
+```
+hosts:          files libvirt dns
+```
+
+Now, we can do directly SSH with the VM's hostname:
+
+```bash
+ssh obiwan-dev
+```
+
+
+## Choice 2: Raw QEMU 
  
-Reference:
+You can also directly use QEMU. Compared to libvirt, it is more cumbersome to type the full QEMU command each time. The raw QEMU commands do give you direct control. However, there is no fundamental difference between the two in terms of their underlying capabilities. The VM images libvirt creates and manages can also be used directly by raw QEMU commands. libvirt provides handy interfaces such as persisting the VM profiles and network management. Thus, it is our recommended choice.
 
-* https://www.collabora.com/news-and-blog/blog/2017/01/16/setting-up-qemu-kvm-for-kernel-development/
-* https://medium.com/@daeseok.youn/prepare-the-environment-for-developing-linux-kernel-with-qemu-c55e37ba8ade 
- 
-The advantages of a QEMU-based dev environment are the quick cycle of kernel rebuilding and booting. It is also friendly to headless servers. Thus, this is the recommended development environment.
 
-### 1.a Install Dependencies
+
+### 2.a Install Dependencies
 
 ```bash
 $ sudo apt-get install  debootstrap libguestfs-tools qemu-system-x86
 ```
  
-### 1.b Create Rootfs
+### 2.b Create Rootfs
  
 QEMU can boot a kernel image directly, e.g., 
  
@@ -139,179 +321,11 @@ sudo umount $mount_dir/proc
 sudo umount $mount_dir
 ```
 
-## Choice 2: libvirt Managed KVM
+### 2.c References
 
-The [libvirt](https://wiki.debian.org/libvirt) suite provides management of different vitalization solutions
-including KVM and Xen. It's more handy to control the VM, networking, etc., 
-than typing raw QEMU commands each time.
-
-Install the `libvirt` toolchain:
-
-```bash
-sudo apt-get install --no-install-recommends qemu-system libvirt-clients libvirt-daemon-system
-```
-
-Your username must be in the `libvirt` group. If not, add the user to the group: `sudo usermod -aG libvirt ryan`.
-
-### 2.a Customize Preseed File
-Use the pressed file [debian-buster-preseed.cfg](debian-buster-preseed.cfg) in this repo to 
-automate the guest OS installation. Copy and customize it:
-
-```bash
-cp debian-buster-preseed.cfg my-preseed.cfg
-vim my-preseed.cfg
-```
-
-### 2.b Download and Mount Guest OS Installation ISO
-
-```bash
-wget -O debian-10.9.0-amd64-netinst.iso https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-10.9.0-amd64-netinst.iso
-mkdir debian10-amd64
-sudo mount -t iso9660 -r -o loop debian-10.9.0-amd64-netinst.iso debian10-amd64
-```
-
-### 2.c Create Guest VM Image and Install Guest OS
-
-We will perform the installation without GUI and in a non-interactive way:
-
-```bash
-proj=obiwan-dev
-qemu-img create -f qcow2 $proj.qcow2 32G
-
-virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian10-amd64 \
---disk path=/dev/loop0,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
---initrd-inject=my-preseed.cfg --memory 16384 --vcpus=8 --graphics none \
---console pty,target_type=serial --extra-args "console=ttyS0" 
-```
-
-The installation beginning will show a couple of error messages like 
-`mount: mounting /dev/vda on /media failed: Invalid argument`. Those 
-are benign errors due to the empty disk image.
-
-If the installation succeeds, the VM will boot into GRUB and you will be able
-to select Debian.
-
-### 2.d Manage and Login to Guest VM
-
-Use `virsh` to list, start, shutdown, login to the create guest VM.
-
-```bash
-$ virsh list --all
- Id    Name                           State
-----------------------------------------------------
- -     obiwan-dev                     shut off
-$ virsh start obiwan-dev
-$ virsh console obiwan-dev
-```
-
-The last two steps can be combined into one step of `virsh start obiwan-dev --console`.
-
-To gracefully shutdown the VM, run `virsh shutdown obiwan-dev`. If the graceful 
-shutdown is not successful, run `virsh destroy obiwan-dev`. Destroy does *not* 
-delete the virtual disk file. It only powers off the VM. To delete the VM, 
-run `virsh undefine obiwan-dev` and manually delete the disk image file.
-
-Install SSH server, update the VM hostname so that we can SSH into the VM later 
-using the hostname.
-
-```bash
-$ virsh console obiwan-dev
-Connected to domain psbox-dev
-Escape character is ^]
-
-order login: root
-Password:
-Last login: Wed Jun  9 03:53:39 EDT 2021 on ttyS0
-...
-root@order:~# apt-get install openssh-server
-root@order:~# hostnamectl set-hostname obiwan-dev
-```
-
-### 2.e Configure Networking
-
-The default bridge networking created by libvirt should work directly for most cases. If 
-not, refer to the manual networking [configuration document](https://wiki.debian.org/KVM#Setting_up_bridge_networking).
-The default NATed, briedged network that libvirt provides is called `default`:
-
-```bash
-$ virsh net-list
- Name                 State      Autostart     Persistent
-----------------------------------------------------------
- default              active     yes           yes
-$ virsh net-info default
-Name:           default
-UUID:           02cc5180-60e3-429a-af96-d1e08cb0a8a4
-Active:         yes
-Persistent:     yes
-Autostart:      yes
-Bridge:         virbr0
-$ virsh net-dhcp-leases default
- Expiry Time          MAC address        Protocol  IP address                Hostname        Client ID or DUID
--------------------------------------------------------------------------------------------------------------------
-```
-
-A DHCP service is provided to the guest VMs via `dnsmasq`.  The VMs using this network 
-will end up in `192.168.122.1/24` (or `192.168.123.1/24`). This network is not 
-automatically started. To start it use: `virsh net-start default`.
-
-Because the VMs get IPs from the DHCP service, their IPs can change upon reboots 
-or when the DHCP lease expires. As a result, we will need to double check the guest 
-VM ip address each time to ssh into the VM. We can configure the network manager 
-to assign static IP to a VM. 
-
-```bash
-$ virsh dumpxml obiwan-dev | grep -i '<mac'
-$ virsh net-edit default
-```
-
-Add a `<host>` entry to the `<dhcp>` element. Use the VM MAC address from the `virsh dumpxml` 
-command in the `mac` field and any static IP in the range to assign to the VM.
-
-```xml
-    ...
-    <dhcp>
-      <range start='192.168.123.2' end='192.168.123.254'/>
-      <host mac='52:54:00:f0:8b:6c' ip='192.168.123.2'/>
-    </dhcp>
-    ...
-```
-
-Then restart the virtual network:
-
-```bash
-$ virsh net-destroy default
-$ virsh net-start default
-$ virsh net-dhcp-leases default
- Expiry Time          MAC address        Protocol  IP address                Hostname        Client ID or DUID
--------------------------------------------------------------------------------------------------------------------
- 2021-06-09 06:10:05  52:54:00:f0:8b:6c  ipv4      192.168.123.2/24          obiwan-dev      ff:00:f0:8b:6c:00:01:00:01:28:52:95:00:52:54:00:f0:8b:6c
-```
-
-Now, you can SSH into the guest VM (assuming SSH server is running the credentials
-have been set up correctly) with the static IP: `ssh 192.168.123.2`.
-
-To make it even more conveniently SSH into the guest VM, we would like to 
-directly use the guest VM's hostname. For a single VM, we can modify the 
-`/etc/hosts` file. But more generally, it is recommended to use the 
-libvirt NSS module, which will allow `ssh` to consult `libvirt` with
-guest VM hostname. 
-
-```bash
-sudo apt-get install libnss-libvirt
-```
-
-The usage of this module is simple: follow the [NSS module documentation](https://libvirt.org/nss.html). 
-In particular, just add `libvirt` to the `hosts` line into the `/etc/nsswitch.conf` file:
-
-```
-hosts:          files libvirt dns
-```
-
-Now, we can do directly SSH with the VM's hostname:
-
-```bash
-ssh obiwan-dev
-```
+* https://www.collabora.com/news-and-blog/blog/2017/01/16/setting-up-qemu-kvm-for-kernel-development/
+* https://medium.com/@daeseok.youn/prepare-the-environment-for-developing-linux-kernel-with-qemu-c55e37ba8ade 
+ 
 
 
 ## Choice 3: VirtualBox
