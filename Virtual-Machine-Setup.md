@@ -13,7 +13,7 @@ than typing raw QEMU commands each time.
 Install the `libvirt` toolchain:
 
 ```bash
-sudo apt-get install --no-install-recommends qemu-system libvirt-clients libvirt-daemon-system virtinst
+sudo apt-get install qemu-system qemu-kvm libvirt-daemon-system libvirt-clients virtinst ebtables dnsmasq
 ```
 
 Your username must be in the `libvirt` group. If not, add the user to the group: `sudo usermod -aG libvirt ryan`.
