@@ -40,7 +40,7 @@ For example, you can change the hostname configuration as follows:
 ### 1.b Download and Mount Guest OS Installation ISO
 
 ```bash
-wget -O debian-10.9.0-amd64-netinst.iso https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-10.9.0-amd64-netinst.iso
+wget -O debian-10.9.0-amd64-netinst.iso https://cdimage.debian.org/cdimage/archive/10.9.0/amd64/iso-cd/debian-10.9.0-amd64-netinst.iso
 mkdir debian10-amd64
 sudo mount -t iso9660 -r -o loop debian-10.9.0-amd64-netinst.iso debian10-amd64
 ```
