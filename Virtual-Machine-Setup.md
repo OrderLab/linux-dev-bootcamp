@@ -66,6 +66,45 @@ are benign errors due to the empty disk image.
 If the installation succeeds, the VM will boot into GRUB and you will be able
 to select Debian.
 
+<details>
+  <summary>Resolve <b>"No common CD-ROM drive was detected"</b> error</summary>
+  
+If you encounter an error message of "No common CD-ROM drive was detected"
+
+[[/images/no-cdrom-error.png\|width=50|no-cdrom-error]]
+
+This is likely because of the wrong loop device (`/dev/loop0`) used in the `virt-install` command. Find the correct device path:
+
+```bash
+$ /sbin/losetup --list -O NAME,BACK-FILE | grep debian-10.9.0-amd64-netinst.iso
+/dev/loop9  /home/ryan/project/obi-wan/vm/debian-10.9.0-amd64-netinst.iso
+```
+
+Then replace `/dev/loop0` in the command with the correct path. And retry `virt-install`:
+
+```bash
+virsh destroy $proj
+virsh undefine $proj
+rm -f $proj.qcow2
+qemu-img create -f qcow2 $proj.qcow2 32G
+loop=/dev/loop9
+
+virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian10-amd64 \
+--disk path=$loop,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
+--initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
+--console pty,target_type=serial --extra-args "console=ttyS0" 
+```
+
+If somehow this fix still does not work, the fallback solution that should work is directly execute `virt-install` with `sudo` and passing the `.iso` image instead of the mounted path:
+
+```bash
+sudo virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian-10.9.0-amd64-netinst.iso --disk path=$proj.qcow2,size=32 \
+--initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
+--console pty,target_type=serial --extra-args "console=ttyS0" 
+```
+
+</details>
+
 ### 1.d Manage and Login to Guest VM
 
 Use `virsh` to list, start, shutdown, login to the create guest VM.
