@@ -43,7 +43,10 @@ For example, you can change the hostname configuration as follows:
 wget -O debian-10.9.0-amd64-netinst.iso https://cdimage.debian.org/cdimage/archive/10.9.0/amd64/iso-cd/debian-10.9.0-amd64-netinst.iso
 mkdir debian10-amd64
 sudo mount -t iso9660 -r -o loop debian-10.9.0-amd64-netinst.iso debian10-amd64
+loop_path=$(/sbin/losetup --list -O NAME,BACK-FILE | grep debian-10.9.0-amd64-netinst.iso | tail -n 1 | cut -d' ' -f 1)
+echo $loop_path
 ```
+**Double check that `loop_path` is not empty and correspond to the iso image** (`/sbin/losetup --list -O NAME,BACK-FILE | grep debian-10.9.0-amd64-netinst.iso`)
 
 ### 1.c Create Guest VM Image and Install Guest OS
 
@@ -54,7 +57,7 @@ proj=obiwan-dev
 qemu-img create -f qcow2 $proj.qcow2 32G
 
 virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian10-amd64 \
---disk path=/dev/loop0,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
+--disk path=$loop_path,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
 --initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
 ```
