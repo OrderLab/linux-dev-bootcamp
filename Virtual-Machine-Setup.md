@@ -89,6 +89,8 @@ This happens because your username is not in the `kvm` or the `libvirt` group. A
 sudo usermod -aG libvirt $USER
 sudo usermod -aG kvm $USER
 ````
+Then logout and re-login for it to take effect.
+
 </details>
 
 <details>
