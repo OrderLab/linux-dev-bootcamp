@@ -70,6 +70,28 @@ If the installation succeeds, the VM will boot into GRUB and you will be able
 to select Debian.
 
 <details>
+  <summary>Resolve <b>"Error validating install location: Distro 'debian10' does not exist in our dictionary"</b></summary>
+
+This is because the default osinfo database in some distributions is outdated. You can update the osinfo database as follows:
+
+```bash
+sudo apt install osinfo-db-tools
+wget https://releases.pagure.org/libosinfo/osinfo-db-20200325.tar.xz
+osinfo-db-import -v osinfo-db-20200325.tar.xz
+```
+</details>
+
+<details>
+  <summary>Resolve <b>"unsupported configuration: CPU mode 'custom' for x86_64 kvm domain on x86_64 host is not supported by hypervisor"</b></summary>
+
+This happens because your username is not in the `kvm` or the `libvirt` group. Add it to the groups:
+```bash
+sudo usermod -aG libvirt $USER
+sudo usermod -aG kvm $USER
+````
+</details>
+
+<details>
   <summary>Resolve <b>"No common CD-ROM drive was detected"</b> error</summary>
   
 If you encounter an error message of "No common CD-ROM drive was detected"
