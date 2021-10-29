@@ -7,4 +7,5 @@
 7. [[Debugging]]
 8. [[Automation]]
 9. [[Troubleshooting]]
-10. [[References]]
+10. [[Profiling]]
+11. [[References]]
