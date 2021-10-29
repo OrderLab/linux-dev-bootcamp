@@ -27,4 +27,5 @@ The tutorials in the wiki are a group knowledge base. Members who use the wiki h
 7. [[Debugging]]
 8. [[Automation]]
 9. [[Troubleshooting]]
-10. [[References]]
+10. [[Profiling]]
+11. [[References]]
