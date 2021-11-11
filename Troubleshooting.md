@@ -14,7 +14,11 @@ stty size
 Then set the terminal size in VM. Put this in VM's `~/.bash_login`
 
 ```bash
-stty rows 42 cols 130
+if [ ! -f /tmp/ALREADYRESET ]; then
+    touch /tmp/ALREADYRESET
+    stty rows 42 cols 130
+    tput init
+fi
 ```
 
 Alternatively, setup `ssh` or `telnet` to connect to the VM.
