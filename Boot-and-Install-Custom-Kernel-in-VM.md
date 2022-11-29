@@ -74,8 +74,8 @@ It is recommended to install the custom kernel into the VM at least once as well
 Once in the VM, install the package files:
 
 ```bash
-sudo dpkg -i linux-image-5.4.0_5.4.0-1_amd64.deb
 sudo dpkg -i linux-headers-5.4.0_5.4.0-1_amd64.deb
+sudo dpkg -i linux-image-5.4.0_5.4.0-1_amd64.deb
 sudo dpkg -i linux-libc-dev_5.4.0-1_amd64.deb
 ```
 
@@ -87,5 +87,45 @@ uname -a
 
 Note after you install the custom kernel, you will likely encounter a loss of VM network after you reboot the VM. Refer to the [troubleshooting page](https://github.com/OrderLab/linux-dev-bootcamp/wiki/Troubleshooting#loss-of-vm-network-after-installing-new-kernel) for how to resolve the issue.
 
+# Change grub entry
+
+To automatically select the custom kernel during booting: 
+
+1. Find the custom kernel menu entry: 
+
+```
+grep -e "menuentry " -e submenu -e linux /boot/grub/grub.cfg
+```
+
+For example, if the output is
+
+```bash
+...
+submenu 'Advanced options for Ubuntu' $menuentry_id_option 'gnulinux-advanced-8b9e1980-828f-418f-ae44-80689ca8bd2f' {
+	menuentry 'Ubuntu, with Linux 5.4.0-100-generic' --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-5.4.0-100-generic-advanced-8b9e1980-828f-418f-ae44-80689ca8bd2f' {
+		gfxmode $linux_gfx_mode
+		linux	/boot/vmlinuz-5.4.0-100-generic root=UUID=8b9e1980-828f-418f-ae44-80689ca8bd2f ro console=ttyS1,115200
+	menuentry 'Ubuntu, with Linux 5.4.0-100-generic (recovery mode)' --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-5.4.0-100-generic-recovery-8b9e1980-828f-418f-ae44-80689ca8bd2f' {
+		linux	/boot/vmlinuz-5.4.0-100-generic root=UUID=8b9e1980-828f-418f-ae44-80689ca8bd2f ro recovery nomodeset dis_ucode_ldr console=ttyS1,115200
+	menuentry 'Ubuntu, with Linux 5.4.0' --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-5.4.0-advanced-8b9e1980-828f-418f-ae44-80689ca8bd2f' {
+		gfxmode $linux_gfx_mode
+		linux	/boot/vmlinuz-5.4.0 root=UUID=8b9e1980-828f-418f-ae44-80689ca8bd2f ro console=ttyS1,115200
+	menuentry 'Ubuntu, with Linux 5.4.0 (recovery mode)' --class ubuntu --class gnu-linux --class gnu --class os $menuentry_id_option 'gnulinux-5.4.0-recovery-8b9e1980-828f-418f-ae44-80689ca8bd2f' {
+		linux	/boot/vmlinuz-5.4.0 root=UUID=8b9e1980-828f-418f-ae44-80689ca8bd2f ro recovery nomodeset dis_ucode_ldr 
+...
+```
+
+Assume our custom kernel is 'Ubuntu, with Linux 5.4.0', which is the 3rd `menuentry` under the `submenu`.
+
+
+2. Change the `GRUB_DEFAULT=0` line in the `/etc/default/grub` file. If the custom kernel is the `Nth` `menuentry` under `submenu`, change it to `GRUB_DEFAULT="1>$N-1$"`. For example, for a 3rd `menuentry`, change it to `GRUB_DEFAULT="1>2"`.
+
+3. Update grub script and reboot:
+
+```
+sudo update-grub
+
+sudo reboot
+```
 
 
