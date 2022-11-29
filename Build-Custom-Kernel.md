@@ -36,6 +36,17 @@ make x86_64_defconfig
 make kvm_guest.config 
 ```
 
+If you are building the kernel to run on a bare-metal machine, you may also need to disable some key signing-related configs:
+
+```bash
+scripts/config --disable SYSTEM_TRUSTED_KEYS
+scripts/config --disable SYSTEM_REVOCATION_KEYS
+scripts/config --disable SECURITY_LOCKDOWN_LSM
+scripts/config --disable MODULE_SIG
+scripts/config --disable MODULE_SIG_ALL
+```
+
+
 ## Compile
 
 ```bash
