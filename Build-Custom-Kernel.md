@@ -27,7 +27,7 @@ If the host kernel version is similar to the built kernel, then copy the host bu
 ```bash
 cp /boot/config-`uname -r`* linux-5.4.86/.config 
 ```
- 
+
 Otherwise, generate a basic config:
  
 ```bash
@@ -46,6 +46,7 @@ scripts/config --disable MODULE_SIG
 scripts/config --disable MODULE_SIG_ALL
 ```
 
+If the build script asks to customize other configs during the initial compilation stage, just press Enter to choose default for all other configs.
 
 ## Compile
 
