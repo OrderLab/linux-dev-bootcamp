@@ -79,6 +79,8 @@ sudo dpkg -i linux-image-5.4.0_5.4.0-1_amd64.deb
 sudo dpkg -i linux-libc-dev_5.4.0-1_amd64.deb
 ```
 
+Note: there might be a .deb package for a debug image, e.g., `linux-image-5.4.0-dbg_5.4.0-1_amd64.deb`, which is quite big. Do *NOT* install that package.
+
 Reboot the VM. Now without specifying the custom kernel in the boot option, you should still see the new kernel version:
 
 ```bash
