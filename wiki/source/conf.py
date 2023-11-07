@@ -10,7 +10,7 @@ html_context = {
     "github_user": "OrderLab",
     "github_repo": "linux-dev-bootcamp",
     "github_version": "master",
-    "conf_py_path": "/docs/source/",
+    "conf_py_path": "/wiki/source/",
 }
 
 source_suffix = ['.rst', '.md']
