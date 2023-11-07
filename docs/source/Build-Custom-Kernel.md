@@ -2,7 +2,7 @@
 
 Reference:
 
-* https://kernelnewbies.org/KernelBuild 
+* [https://kernelnewbies.org/KernelBuild](https://kernelnewbies.org/KernelBuild)
 
 ## Install Toolchain
  

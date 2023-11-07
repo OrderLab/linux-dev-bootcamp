@@ -1,4 +1,5 @@
-# Intro
+Intro
+=====
 
 Welcome to the OrderLab **Linux Kernel Dev Bootcamp** wiki!
 
@@ -16,16 +17,18 @@ The tutorials in the wiki are a group knowledge base. Members who use the wiki h
 * supplementing references with links to good tutorial, documentation, blog that are helpful to read
 
 
-## Chapter
+.. toctree::
+   :maxdepth: 1
+   :caption: Chapters:
 
-1. [[Virtual Machine Setup]]
-2. [[Boot VM with Stock Kernel|Boot VM Stock Kernel]]
-3. [[Build Custom Kernel]]
-4. [[Boot and Install Custom Kernel|Boot and Install Custom Kernel in VM]]
-5. [[Configure VM Networking|VM Networking]]
-6. [[Modify Kernel]]
-7. [[Debugging]]
-8. [[Automation]]
-9. [[Troubleshooting]]
-10. [[Profiling]]
-11. [[References]]
+   Virtual-Machine-Setup
+   Boot-VM-Stock-Kernel
+   Build-Custom-Kernel
+   Boot-and-Install-Custom-Kernel-in-VM
+   VM-Networking
+   Modify-Kernel
+   Debugging
+   Automation
+   Troubleshooting
+   Profiling
+   References

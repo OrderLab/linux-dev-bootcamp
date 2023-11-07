@@ -1,6 +1,8 @@
-# Enable Network
+# Configure VM Networking
 
-## 1. QEMU: 
+## Enable Network
+
+### 1. QEMU: 
  
 Boot into the system image with root user using the previous command
  
@@ -10,13 +12,13 @@ root@razor5:~# ip link show
  
 If the output shows something besides “lo” (loopback), then we can use that to create a DHCP configuration. If it only outputs the “lo”, then we need more complicated QEMU network configuration: https://wiki.qemu.org/Documentation/Networking.
  
-### Shut down the system
+#### Shut down the system
 
 ```bash
 root@razor5:~# shutdown now 
 ```
 
-### Remount the system image
+#### Remount the system image
  
 ```bash
 sudo mount -o loop  my-linux.img qemu-mount.dir/

@@ -98,7 +98,7 @@ Then logout and re-login for it to take effect.
   
 If you encounter an error message of "No common CD-ROM drive was detected"
 
-[[/images/no-cdrom-error.png\|width=50|no-cdrom-error]]
+![No CDROM](images/no-cdrom-error.png)
 
 This is likely because of the wrong loop device (`/dev/loop0`) used in the `virt-install` command. Find the correct device path:
 
