@@ -19,7 +19,7 @@ sudo apt-get install qemu-system qemu-kvm libvirt-daemon-system libvirt-clients 
 Your username must be in the `libvirt` group. If not, add the user to the group: `sudo usermod -aG libvirt ryan`.
 
 ### 1.a Customize Preseed File
-Use the pressed file [debian-buster-preseed.cfg](debian-buster-preseed.cfg) in this repo to 
+Use the pressed file [debian-buster-preseed.cfg](https://github.com/OrderLab/linux-dev-bootcamp/blob/master/debian-buster-preseed.cfg) in this repo to 
 automate the guest OS installation. Copy and customize it:
 
 ```bash
