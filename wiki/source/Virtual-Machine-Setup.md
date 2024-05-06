@@ -69,9 +69,12 @@ are benign errors due to the empty disk image.
 If the installation succeeds, the VM will boot into GRUB and you will be able
 to select Debian.
 
-<details>
-  <summary>Resolve <b>"Error validating install location: Distro 'debian10' does not exist in our dictionary"</b></summary>
+#### Troubleshooting Errors
 
+<details>
+  <summary>Resolve <code class="docutils literal notranslate"><span class="pre">Error validating install location: Distro 'debian10' does not exist in our dictionary</span></code></summary>
+
+<p></p>
 This is because the default osinfo database in some distributions is outdated. You can update the osinfo database as follows:
 
 ```bash
@@ -82,8 +85,43 @@ osinfo-db-import -v osinfo-db-20200325.tar.xz
 </details>
 
 <details>
-  <summary>Resolve <b>"unsupported configuration: CPU mode 'custom' for x86_64 kvm domain on x86_64 host is not supported by hypervisor"</b></summary>
+  <summary>Resolve <code class="docutils literal notranslate"><span class="pre">Couldn't find kernel for install tree</span></code></summary>
 
+<p></p>
+This error occurs due to changes in logic of how location argument is handled in 
+recent versions (e.g., `4.0.0` on Ubuntu 22) of `virt-install` compared to older 
+versions (e.g., `1.5.1` on Ubuntu 18). 
+
+There are two ways to work around the problem:
+
+* (a) directly pass the ISO file path to `virt-install`.
+
+```bash
+sudo umount debian10-amd64
+
+virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian-10.9.0-amd64-netinst.iso \
+--disk path=$proj.qcow2,size=32 \
+--initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
+--console pty,target_type=serial --extra-args "console=ttyS0" 
+
+```
+
+* (b) directly specify the kernel and initrd file paths in the location argument:
+
+```bash
+virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian10-amd64,kernel=install.amd/vmlinuz,initrd=install.amd/initrd.gz \
+--disk path=$loop_path,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
+--initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
+--console pty,target_type=serial --extra-args "console=ttyS0" 
+```
+
+</details>
+  
+
+<details>
+  <summary>Resolve <code class="docutils literal notranslate"><span class="pre">unsupported configuration: CPU mode 'custom' for x86_64 kvm domain on x86_64 host is not supported by hypervisor</span></code></summary>
+
+<p></p>
 This happens because your username is not in the `kvm` or the `libvirt` group. Add it to the groups:
 ```bash
 sudo usermod -aG libvirt $USER
@@ -94,9 +132,10 @@ Then logout and re-login for it to take effect.
 </details>
 
 <details>
-  <summary>Resolve <b>"No common CD-ROM drive was detected"</b> error</summary>
+  <summary>Resolve <code class="docutils literal notranslate"><span class="pre">No common CD-ROM drive was detected</span></code></summary>
   
-If you encounter an error message of "No common CD-ROM drive was detected"
+<p></p>
+If you encounter the above error message
 
 ![No CDROM](images/no-cdrom-error.png)
 
@@ -129,8 +168,9 @@ sudo virt-install --virt-type kvm --name $proj --os-variant debian10 --location 
 --initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
 ```
-
 </details>
+
+<br>
 
 ### 1.d Manage and Login to Guest VM
 
@@ -264,7 +304,7 @@ You can also directly use QEMU. Compared to libvirt, it is more cumbersome to ty
 ### 2.a Install Dependencies
 
 ```bash
-$ sudo apt-get install  debootstrap libguestfs-tools qemu-system-x86
+sudo apt-get install  debootstrap libguestfs-tools qemu-system-x86
 ```
  
 ### 2.b Create Rootfs
