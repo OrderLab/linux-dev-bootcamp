@@ -24,7 +24,7 @@ automate the guest OS installation. Copy and customize it:
 
 ```bash
 mkdir workspace && cd workspace
-git clone git@github.com:OrderLab/linux-dev-bootcamp.git bootcamp
+git clone https://github.com/OrderLab/linux-dev-bootcamp.git bootcamp
 mkdir vm && cd vm
 cp ../bootcamp/debian-buster-preseed.cfg preseed.cfg
 ```
