@@ -54,6 +54,18 @@ If the build script asks to customize other configs during the initial compilati
 make -j16 
 ```
 
+#### Troubleshooting Errors
+
+<details>
+  <summary>Resolve <code class="docutils literal notranslate"><span class="pre">BTF: .tmp_vmlinux.btf: pahole (pahole) is not available Failed to generate BTF for vmlinux</span></code></summary>
+
+<p></p>
+Attempts to compile a more recent version of Linux may run into an error stating pahole is not available. To avoid this compilation error, use <code>sudo apt-get install dwarves</code> to install the missing package. 
+
+<p></p>
+Alternatively, the error can also be avoided by disabling BPF Type Format so pahole won't be needed. In the kernel config, run <code>scripts/config --disable CONFIG_DEBUG_INFO_BTF</code> to disable BPF Type Format.
+</details>
+
 ## Package
 
 ```bash
