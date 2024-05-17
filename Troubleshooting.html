@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Troubleshooting &mdash; OrderLab Linux Development Guide v1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5cb08e4e"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Performance Profiling" href="Profiling.html" />
+    <link rel="prev" title="Automation" href="Automation.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            OrderLab Linux Development Guide
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Chapters:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Virtual-Machine-Setup.html">Virtual Machine Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Boot-VM-Stock-Kernel.html">Boot Virtual Machine with Stock Kernel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Build-Custom-Kernel.html">Build Custom Kernel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Boot-and-Install-Custom-Kernel-in-VM.html">Boot and Install Custom Kernel in VM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="VM-Networking.html">Configure VM Networking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Modify-Kernel.html">Modify Kernel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Automation.html">Automation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#serial-size-is-fixed-at-80x24">Serial size is fixed at 80x24</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#force-quit-qemu">Force-quit QEMU</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#fixing-corrupted-file-system">Fixing corrupted file system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#extending-disk-size">Extending disk size</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reduce-vm-image-size">Reduce VM image size</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#loss-of-vm-network-after-installing-new-kernel">Loss of VM network after installing new kernel</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#symptom">Symptom</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#diagnosis">Diagnosis</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Profiling.html">Performance Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="References.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OrderLab Linux Development Guide</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Troubleshooting</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/OrderLab/linux-dev-bootcamp/blob/master/wiki/source/Troubleshooting.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="troubleshooting">
+<h1>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading"></a></h1>
+<section id="serial-size-is-fixed-at-80x24">
+<h2>Serial size is fixed at 80x24<a class="headerlink" href="#serial-size-is-fixed-at-80x24" title="Link to this heading"></a></h2>
+<p>In <code class="docutils literal notranslate"><span class="pre">-nographic</span></code> mode, QEMU serial uses <code class="docutils literal notranslate"><span class="pre">vt220</span></code> and cannot automatically fit to the host’s terminal size. Thus commands such as <code class="docutils literal notranslate"><span class="pre">vim</span></code> and <code class="docutils literal notranslate"><span class="pre">tmux</span></code> may become inconvenient to use. We can manually set terminal size in the VM.</p>
+<p>First get the host terminal size. The first value below is rows and the second is columns.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>stty<span class="w"> </span>size
+<span class="c1"># 42 130</span>
+</pre></div>
+</div>
+<p>Then set the terminal size in VM. Put this in VM’s <code class="docutils literal notranslate"><span class="pre">~/.bash_login</span></code></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>!<span class="w"> </span>-f<span class="w"> </span>/tmp/ALREADYRESET<span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<span class="w">    </span>touch<span class="w"> </span>/tmp/ALREADYRESET
+<span class="w">    </span>stty<span class="w"> </span>rows<span class="w"> </span><span class="m">42</span><span class="w"> </span>cols<span class="w"> </span><span class="m">130</span>
+<span class="w">    </span>tput<span class="w"> </span>init
+<span class="k">fi</span>
+</pre></div>
+</div>
+<p>Alternatively, setup <code class="docutils literal notranslate"><span class="pre">ssh</span></code> or <code class="docutils literal notranslate"><span class="pre">telnet</span></code> to connect to the VM.</p>
+</section>
+<section id="force-quit-qemu">
+<h2>Force-quit QEMU<a class="headerlink" href="#force-quit-qemu" title="Link to this heading"></a></h2>
+<p>Sometimes our modified kernel may panic, and we need to force halt the VM. We can use <code class="docutils literal notranslate"><span class="pre">pkill</span></code> in the host to kill QEMU. Alternatively, press <code class="docutils literal notranslate"><span class="pre">Ctrl-a</span> <span class="pre">x</span></code> in the QEMU serial console. This is useful in text mode (<code class="docutils literal notranslate"><span class="pre">-nographic</span></code> mode).</p>
+<p>QEMU will terminate and print:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">QEMU</span><span class="p">:</span> <span class="n">Terminated</span>
+</pre></div>
+</div>
+<p>Side note: There are other functionalities in <code class="docutils literal notranslate"><span class="pre">Ctrl-a</span></code>. Press <code class="docutils literal notranslate"><span class="pre">Ctrl-a</span> <span class="pre">h</span></code> for help. For example, <code class="docutils literal notranslate"><span class="pre">Ctrl-a</span> <span class="pre">c</span></code> switches between console and <a class="reference external" href="https://qemu-project.gitlab.io/qemu/system/monitor.html">QEMU Monitor</a>. You may see something like below if you accidentally pressed <code class="docutils literal notranslate"><span class="pre">Ctrl-a</span> <span class="pre">c</span></code>. Press <code class="docutils literal notranslate"><span class="pre">Ctrl-a</span> <span class="pre">c</span></code> to switch back to VM.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">QEMU</span> <span class="mf">2.11.1</span> <span class="n">monitor</span> <span class="o">-</span> <span class="nb">type</span> <span class="s1">&#39;help&#39;</span> <span class="k">for</span> <span class="n">more</span> <span class="n">information</span>
+<span class="p">(</span><span class="n">qemu</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>To send a real <code class="docutils literal notranslate"><span class="pre">Ctrl-a</span></code> (go to start of line) to the VM, press <code class="docutils literal notranslate"><span class="pre">Ctrl-a</span></code> twice. To send <code class="docutils literal notranslate"><span class="pre">Ctrl-a</span></code> into <code class="docutils literal notranslate"><span class="pre">screen</span></code> in the VM, press <code class="docutils literal notranslate"><span class="pre">Ctrl-a</span> <span class="pre">Ctrl-a</span> <span class="pre">a</span></code>.</p>
+</section>
+<section id="fixing-corrupted-file-system">
+<h2>Fixing corrupted file system<a class="headerlink" href="#fixing-corrupted-file-system" title="Link to this heading"></a></h2>
+<p>Sometimes if you happen to run the VM and mount the disk image at the same time, the file system may be messed up.</p>
+<p>First unmount the disk image and shutdown the VM. Then use fsck tools (<code class="docutils literal notranslate"><span class="pre">e2fsck</span></code> for ext4) to fix the file system.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>e2fsck<span class="w"> </span>-f<span class="w"> </span>qemu-image.img
+</pre></div>
+</div>
+<p>In most cases if the VM, only file system stats needs to be recalculated and no data will loss.</p>
+<p>There may have some data corruption or data loss In some cases.</p>
+</section>
+<section id="extending-disk-size">
+<h2>Extending disk size<a class="headerlink" href="#extending-disk-size" title="Link to this heading"></a></h2>
+<p>First extend the disk image size with <code class="docutils literal notranslate"><span class="pre">qemu-img</span></code>, and then use file system utility (<code class="docutils literal notranslate"><span class="pre">resize2fs</span></code> for ext4) to resize the file system.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>qemu-img<span class="w"> </span>resize<span class="w"> </span>qemu-image.img<span class="w"> </span>+1G
+e2fsck<span class="w"> </span>-f<span class="w"> </span>qemu-image.img
+resize2fs<span class="w"> </span>qemu-image.img
+</pre></div>
+</div>
+<p><strong>Caution for shrinking</strong>: We need to change the above command order for shrinking. File system resizing must be done before resizing disk image.</p>
+</section>
+<section id="reduce-vm-image-size">
+<h2>Reduce VM image size<a class="headerlink" href="#reduce-vm-image-size" title="Link to this heading"></a></h2>
+<p>The VM image size can grow into an explosive size after a while (e.g., 30+ GB), even though the total data you add to the VM is definitely not that big. This is because of the free space in the VM image is not reclaimed. You can use the <code class="docutils literal notranslate"><span class="pre">virt-sparsify</span></code> tool to reduce the image size, which is easy to use and safe. Please read the man page of <code class="docutils literal notranslate"><span class="pre">virt-sparsify</span></code> first: https://libguestfs.org/virt-sparsify.1.html</p>
+<p><strong>Shut down the VM</strong>, then run the command <code class="docutils literal notranslate"><span class="pre">virt-sparsify</span> <span class="pre">indisk.img</span> <span class="pre">outdisk.img</span></code>. You should see significantly reduced image size for the <code class="docutils literal notranslate"><span class="pre">outdisk.img</span></code>. Test the new image with QEMU and verify it does not loose data. After you double check it works, you can delete <code class="docutils literal notranslate"><span class="pre">indisk.img</span></code> and rename <code class="docutils literal notranslate"><span class="pre">outdisk.img</span></code> to <code class="docutils literal notranslate"><span class="pre">indisk.img</span></code>.</p>
+<p>If the VM image format is <code class="docutils literal notranslate"><span class="pre">qcow2</span></code>, you can further add <code class="docutils literal notranslate"><span class="pre">--compress</span></code> option to compress the large image.</p>
+</section>
+<section id="loss-of-vm-network-after-installing-new-kernel">
+<h2>Loss of VM network after installing new kernel<a class="headerlink" href="#loss-of-vm-network-after-installing-new-kernel" title="Link to this heading"></a></h2>
+<p>When you install the custom-built kernel for the first time, you will likely encounter a loss of VM network after the VM reboots. The root cause is because the network interface changed with the custom kernel, so you need to update the network configuration to restore the network functionality.</p>
+<section id="symptom">
+<h3>Symptom<a class="headerlink" href="#symptom" title="Link to this heading"></a></h3>
+<p>The VM’s network interface no longer has an IP address:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>sudo<span class="w"> </span>ifconfig<span class="w"> </span>-a
+enp0s2:<span class="w"> </span><span class="nv">flags</span><span class="o">=</span><span class="m">4098</span>&lt;BROADCAST,MULTICAST&gt;<span class="w">  </span>mtu<span class="w"> </span><span class="m">1500</span>
+<span class="w">        </span>ether<span class="w"> </span><span class="m">52</span>:54:00:f0:8b:6c<span class="w">  </span>txqueuelen<span class="w"> </span><span class="m">1000</span><span class="w">  </span><span class="o">(</span>Ethernet<span class="o">)</span>
+<span class="w">        </span>RX<span class="w"> </span>packets<span class="w"> </span><span class="m">0</span><span class="w">  </span>bytes<span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="o">(</span><span class="m">0</span>.0<span class="w"> </span>B<span class="o">)</span>
+<span class="w">        </span>RX<span class="w"> </span>errors<span class="w"> </span><span class="m">0</span><span class="w">  </span>dropped<span class="w"> </span><span class="m">0</span><span class="w">  </span>overruns<span class="w"> </span><span class="m">0</span><span class="w">  </span>frame<span class="w"> </span><span class="m">0</span>
+...
+</pre></div>
+</div>
+<p>On the host, the DHCP lease is also gone:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>virsh<span class="w"> </span>net-dhcp-leases<span class="w"> </span>default
+<span class="w"> </span>Expiry<span class="w"> </span>Time<span class="w">          </span>MAC<span class="w"> </span>address<span class="w">        </span>Protocol<span class="w">  </span>IP<span class="w"> </span>address<span class="w">                </span>Hostname<span class="w">        </span>Client<span class="w"> </span>ID<span class="w"> </span>or<span class="w"> </span>DUID
+-------------------------------------------------------------------------------------------------------------------
+</pre></div>
+</div>
+</section>
+<section id="diagnosis">
+<h3>Diagnosis<a class="headerlink" href="#diagnosis" title="Link to this heading"></a></h3>
+<p>Check the network interface configuration file <code class="docutils literal notranslate"><span class="pre">/etc/network/interfaces</span></code> inside the VM:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">...</span>
+<span class="n">allow</span><span class="o">-</span><span class="n">hotplug</span> <span class="n">ens2</span>
+<span class="n">iface</span> <span class="n">ens2</span> <span class="n">inet</span> <span class="n">dhcp</span>
+</pre></div>
+</div>
+<p>There is an <code class="docutils literal notranslate"><span class="pre">ens2</span></code> in the configuration file, but there is no such interface in the output of <code class="docutils literal notranslate"><span class="pre">ifconfig</span> <span class="pre">-a</span></code>. In addition, the <code class="docutils literal notranslate"><span class="pre">ifconfig</span> <span class="pre">-a</span></code> shows an interface <code class="docutils literal notranslate"><span class="pre">enp0s2</span></code>, which does not appear in the configuration file. This discrepancy leads to our diagnosis hypothesis that the network interface <code class="docutils literal notranslate"><span class="pre">ens2</span></code> from the VM creation time no longer exists and a new interface <code class="docutils literal notranslate"><span class="pre">enp0s2</span></code> is added with the custom kernel. To validate this hypothesis, simply update the <code class="docutils literal notranslate"><span class="pre">ens2</span></code> in the configuration:</p>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">- allow-hotplug ens2</span>
+<span class="gd">- iface ens2 inet dhcp</span>
+<span class="gi">+ allow-hotplug enp0s2</span>
+<span class="gi">+ iface enp0s2 inet dhcp</span>
+</pre></div>
+</div>
+<p>Reboot the VM, then check the <code class="docutils literal notranslate"><span class="pre">ifconfig</span></code> output:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>sudo<span class="w"> </span>ifconfig<span class="w"> </span>-a
+enp0s2:<span class="w"> </span><span class="nv">flags</span><span class="o">=</span><span class="m">4163</span>&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;<span class="w">  </span>mtu<span class="w"> </span><span class="m">1500</span>
+<span class="w">        </span>inet<span class="w"> </span><span class="m">192</span>.168.123.2<span class="w">  </span>netmask<span class="w"> </span><span class="m">255</span>.255.255.0<span class="w">  </span>broadcast<span class="w"> </span><span class="m">192</span>.168.123.255
+<span class="w">        </span>inet6<span class="w"> </span>fe80::5054:ff:fef0:8b6c<span class="w">  </span>prefixlen<span class="w"> </span><span class="m">64</span><span class="w">  </span>scopeid<span class="w"> </span>0x20&lt;link&gt;
+...
+</pre></div>
+</div>
+<p>It gets assigned with the IP address now.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Automation.html" class="btn btn-neutral float-left" title="Automation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Profiling.html" class="btn btn-neutral float-right" title="Performance Profiling" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, OrderLab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Build Custom Kernel &mdash; OrderLab Linux Development Guide v1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5cb08e4e"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Boot and Install Custom Kernel in VM" href="Boot-and-Install-Custom-Kernel-in-VM.html" />
+    <link rel="prev" title="Boot Virtual Machine with Stock Kernel" href="Boot-VM-Stock-Kernel.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            OrderLab Linux Development Guide
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Chapters:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Virtual-Machine-Setup.html">Virtual Machine Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Boot-VM-Stock-Kernel.html">Boot Virtual Machine with Stock Kernel</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Build Custom Kernel</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#install-toolchain">Install Toolchain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#download-linux-source">Download Linux Source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#kernel-config">Kernel Config</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#compile">Compile</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#troubleshooting-errors">Troubleshooting Errors</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#package">Package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Boot-and-Install-Custom-Kernel-in-VM.html">Boot and Install Custom Kernel in VM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="VM-Networking.html">Configure VM Networking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Modify-Kernel.html">Modify Kernel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Automation.html">Automation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Profiling.html">Performance Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="References.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OrderLab Linux Development Guide</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Build Custom Kernel</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/OrderLab/linux-dev-bootcamp/blob/master/wiki/source/Build-Custom-Kernel.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="build-custom-kernel">
+<h1>Build Custom Kernel<a class="headerlink" href="#build-custom-kernel" title="Link to this heading"></a></h1>
+<p>Reference:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://kernelnewbies.org/KernelBuild">https://kernelnewbies.org/KernelBuild</a></p></li>
+</ul>
+<section id="install-toolchain">
+<h2>Install Toolchain<a class="headerlink" href="#install-toolchain" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>libncurses5-dev<span class="w"> </span>gcc<span class="w"> </span>make<span class="w"> </span>git<span class="w"> </span>exuberant-ctags<span class="w"> </span>bc<span class="w"> </span>libssl-dev<span class="w"> </span>flex<span class="w"> </span>bison<span class="w"> </span>libelf-dev<span class="w"> </span>rsync
+</pre></div>
+</div>
+<p>Try to build the kernel on a host with similar kernel versions</p>
+</section>
+<section id="download-linux-source">
+<h2>Download Linux Source<a class="headerlink" href="#download-linux-source" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>https://cdn.kernel.org/pub/linux/kernel/v5.x/linux-5.4.86.tar.xz<span class="w"> </span>
+tar<span class="w"> </span>xvf<span class="w"> </span>linux-5.4.86.tar.xz
+</pre></div>
+</div>
+</section>
+<section id="kernel-config">
+<h2>Kernel Config<a class="headerlink" href="#kernel-config" title="Link to this heading"></a></h2>
+<p>If the host kernel version is similar to the built kernel, then copy the host build config:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cp<span class="w"> </span>/boot/config-<span class="sb">`</span>uname<span class="w"> </span>-r<span class="sb">`</span>*<span class="w"> </span>linux-5.4.86/.config<span class="w"> </span>
+</pre></div>
+</div>
+<p>Otherwise, generate a basic config:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>linux-5.4.86
+make<span class="w"> </span>x86_64_defconfig
+make<span class="w"> </span>kvm_guest.config<span class="w"> </span>
+</pre></div>
+</div>
+<p>If you are building the kernel to run on a bare-metal machine, you may also need to disable some key signing-related configs:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>scripts/config<span class="w"> </span>--disable<span class="w"> </span>SYSTEM_TRUSTED_KEYS
+scripts/config<span class="w"> </span>--disable<span class="w"> </span>SYSTEM_REVOCATION_KEYS
+scripts/config<span class="w"> </span>--disable<span class="w"> </span>SECURITY_LOCKDOWN_LSM
+scripts/config<span class="w"> </span>--disable<span class="w"> </span>MODULE_SIG
+scripts/config<span class="w"> </span>--disable<span class="w"> </span>MODULE_SIG_ALL
+</pre></div>
+</div>
+<p>If the build script asks to customize other configs during the initial compilation stage, just press Enter to choose default for all other configs.</p>
+</section>
+<section id="compile">
+<h2>Compile<a class="headerlink" href="#compile" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>-j16<span class="w"> </span>
+</pre></div>
+</div>
+<section id="troubleshooting-errors">
+<h3>Troubleshooting Errors<a class="headerlink" href="#troubleshooting-errors" title="Link to this heading"></a></h3>
+<details>
+  <summary>Resolve <code class="docutils literal notranslate"><span class="pre">BTF: .tmp_vmlinux.btf: pahole (pahole) is not available Failed to generate BTF for vmlinux</span></code></summary>
+<p></p>
+Attempts to compile a more recent version of Linux may run into an error stating pahole is not available. To avoid this compilation error, use <code>sudo apt-get install dwarves</code> to install the missing package. 
+<p></p>
+Alternatively, the error can also be avoided by disabling BPF Type Format so pahole won't be needed. In the kernel config, run <code>scripts/config --disable CONFIG_DEBUG_INFO_BTF</code> to disable BPF Type Format.
+</details>
+</section>
+</section>
+<section id="package">
+<h2>Package<a class="headerlink" href="#package" title="Link to this heading"></a></h2>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>make<span class="w"> </span>-j16<span class="w"> </span>bindeb-pkg
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Boot-VM-Stock-Kernel.html" class="btn btn-neutral float-left" title="Boot Virtual Machine with Stock Kernel" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Boot-and-Install-Custom-Kernel-in-VM.html" class="btn btn-neutral float-right" title="Boot and Install Custom Kernel in VM" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, OrderLab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
