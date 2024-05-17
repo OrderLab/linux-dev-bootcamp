@@ -25,14 +25,14 @@ sudo usermod -aG kvm $USER
 
 
 ### 1.a Customize Preseed File
-Use the pressed file [debian-buster-preseed.cfg](https://github.com/OrderLab/linux-dev-bootcamp/blob/master/debian-buster-preseed.cfg) in this repo to 
+Use the pressed file [debian-preseed.cfg](https://github.com/OrderLab/linux-dev-bootcamp/blob/master/debian-preseed.cfg) in this repo to 
 automate the guest OS installation. Copy and customize it:
 
 ```bash
 mkdir workspace && cd workspace
 git clone https://github.com/OrderLab/linux-dev-bootcamp.git bootcamp
 mkdir vm && cd vm
-cp ../bootcamp/debian-buster-preseed.cfg preseed.cfg
+cp ../bootcamp/debian-preseed.cfg preseed.cfg
 ```
 
 Use an editor to change `preseed.cfg` such as the new user, initial password, hostname. 
@@ -51,24 +51,52 @@ servers, it is likely that the image has been downloaded and mounted, so you
 should skip these three commands.
 
 ```bash
+wget https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.5.0-amd64-netinst.iso
+mkdir debian12-5-amd64
+sudo mount -t iso9660 -r -o loop debian-12.5.0-amd64-netinst.iso debian12-5-amd64
+```
+
+<details>
+  <summary>For Debian 10</summary>
+
+```bash
 wget -O debian-10.9.0-amd64-netinst.iso https://cdimage.debian.org/cdimage/archive/10.9.0/amd64/iso-cd/debian-10.9.0-amd64-netinst.iso
 mkdir debian10-9-amd64
 sudo mount -t iso9660 -r -o loop debian-10.9.0-amd64-netinst.iso debian10-9-amd64
 ```
 
+</details>
+
 Next define variables for the loop device path, image path, and mount path:
 
 ```bash
+os_ver=debian12
+iso_path=$(/sbin/losetup --list -O NAME,BACK-FILE | grep debian-12.5.0-amd64-netinst.iso | tail -n 1)
+IFS=' ' read -r dev_path img_path <<< $iso_path
+mount_path=$([ -z "$img_path" ] || mount | grep $img_path | awk '{ print $3}')
+```
+
+<details>
+  <summary>For Debian 10</summary>
+
+```bash
+os_ver=debian10
 iso_path=$(/sbin/losetup --list -O NAME,BACK-FILE | grep debian-10.9.0-amd64-netinst.iso | tail -n 1)
 IFS=' ' read -r dev_path img_path <<< $iso_path
 mount_path=$([ -z "$img_path" ] || mount | grep $img_path | awk '{ print $3}')
+```
+
+</details>
+
+**Double check that the three variables are not empty** (they will be used in
+later commands), and that the`img_path` corresponds to the desired ISO image
+path.
+
+```bash
 echo $dev_path
 echo $img_path
 echo $mount_path
 ```
-
-**Double check that the three variables are not empty**, and that the`img_path`
-corresponds to the desired ISO image path.
 
 ### 1.c Create Guest VM Image and Install Guest OS
 
@@ -78,7 +106,7 @@ We will perform the installation without GUI and in a non-interactive way:
 proj=obiwan-dev
 qemu-img create -f qcow2 $proj.qcow2 32G
 
-virt-install --virt-type kvm --name $proj --os-variant debian10 --location $mount_path \
+virt-install --virt-type kvm --name $proj --os-variant $os_ver --location $mount_path \
 --disk path=$dev_path,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
 --initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
@@ -88,8 +116,8 @@ The installation beginning will show a couple of error messages like
 `mount: mounting /dev/vda on /media failed: Invalid argument`. Those 
 are benign errors due to the empty disk image.
 
-If the installation succeeds, the VM will boot into GRUB and you will be able
-to select Debian.
+If the installation succeeds, the VM will boot into GRUB so you can select Debian or 
+it will directly boot into a login screen. To exit the login screen, press `Ctrl + ]`
 
 #### Troubleshooting Errors
 <details>
@@ -128,7 +156,7 @@ There are two ways to work around the problem:
 * (a) directly pass the ISO file path to `virt-install`.
 
 ```bash
-virt-install --virt-type kvm --name $proj --os-variant debian10 --location $img_path \
+virt-install --virt-type kvm --name $proj --os-variant $os_ver --location $img_path \
 --disk path=$proj.qcow2,size=32 \
 --initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
@@ -138,7 +166,7 @@ virt-install --virt-type kvm --name $proj --os-variant debian10 --location $img_
 * (b) directly specify the kernel and initrd file paths in the location argument:
 
 ```bash
-virt-install --virt-type kvm --name $proj --os-variant debian10 --location $mount_path,kernel=install.amd/vmlinuz,initrd=install.amd/initrd.gz \
+virt-install --virt-type kvm --name $proj --os-variant $os_ver --location $mount_path,kernel=install.amd/vmlinuz,initrd=install.amd/initrd.gz \
 --disk path=$dev_path,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
 --initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
@@ -189,7 +217,7 @@ If you encounter the above error message
 This is likely because of the wrong loop device (`/dev/loop0`) used in the `virt-install` command. Find the correct device path:
 
 ```bash
-$ /sbin/losetup --list -O NAME,BACK-FILE | grep debian-10.9.0-amd64-netinst.iso
+/sbin/losetup --list -O NAME,BACK-FILE | grep debian-10.9.0-amd64-netinst.iso
 /dev/loop9  /home/ryan/project/obi-wan/vm/debian-10.9.0-amd64-netinst.iso
 ```
 
@@ -210,7 +238,7 @@ echo $dev_path
 Retry `virt-install`:
 
 ```bash
-virt-install --virt-type kvm --name $proj --os-variant debian10 --location $mount_path \
+virt-install --virt-type kvm --name $proj --os-variant $os_ver --location $mount_path \
 --disk path=$dev_path,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
 --initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
@@ -219,7 +247,7 @@ virt-install --virt-type kvm --name $proj --os-variant debian10 --location $moun
 If somehow this fix still does not work, the fallback solution that should work is directly execute `virt-install` with `sudo` and passing the `.iso` image instead of the mounted path:
 
 ```bash
-sudo virt-install --virt-type kvm --name $proj --os-variant debian10 --location $img_path --disk path=$proj.qcow2,size=32 \
+sudo virt-install --virt-type kvm --name $proj --os-variant $os_ver --location $img_path --disk path=$proj.qcow2,size=32 \
 --initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
 ```
