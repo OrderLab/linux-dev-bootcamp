@@ -1,7 +1,7 @@
 # Virtual Machine Setup
 
 
-It is recommended to use either `libvirt` management suite or raw QEMU for the Linux kernel development. The following instructions are based on Ubuntu 18.04.
+It is recommended to use either `libvirt` management suite or raw QEMU for the Linux kernel development. The following instructions are based on Ubuntu 22.04.
 
 
 ## Choice 1: libvirt Managed KVM
@@ -16,7 +16,13 @@ Install the `libvirt` toolchain:
 sudo apt-get install qemu-system qemu-kvm libvirt-daemon-system libvirt-clients virtinst ebtables dnsmasq
 ```
 
-Your username must be in the `libvirt` group. If not, add the user to the group: `sudo usermod -aG libvirt ryan`.
+Your username should be in the `libvirt` group and the `kvm` group. If not, add the 
+user to two groups (and re-login for them to take effect):
+```bash
+sudo usermod -aG libvirt $USER
+sudo usermod -aG kvm $USER
+```
+
 
 ### 1.a Customize Preseed File
 Use the pressed file [debian-buster-preseed.cfg](https://github.com/OrderLab/linux-dev-bootcamp/blob/master/debian-buster-preseed.cfg) in this repo to 
@@ -39,14 +45,30 @@ For example, you can change the hostname configuration as follows:
 
 ### 1.b Download and Mount Guest OS Installation ISO
 
+If the OS image is not available, run the following command to download and
+mount the image. You need to have `sudo` permission for `mount`.  On the group
+servers, it is likely that the image has been downloaded and mounted, so you
+should skip these three commands.
+
 ```bash
 wget -O debian-10.9.0-amd64-netinst.iso https://cdimage.debian.org/cdimage/archive/10.9.0/amd64/iso-cd/debian-10.9.0-amd64-netinst.iso
-mkdir debian10-amd64
-sudo mount -t iso9660 -r -o loop debian-10.9.0-amd64-netinst.iso debian10-amd64
-loop_path=$(/sbin/losetup --list -O NAME,BACK-FILE | grep debian-10.9.0-amd64-netinst.iso | tail -n 1 | cut -d' ' -f 1)
-echo $loop_path
+mkdir debian10-9-amd64
+sudo mount -t iso9660 -r -o loop debian-10.9.0-amd64-netinst.iso debian10-9-amd64
 ```
-**Double check that `loop_path` is not empty and correspond to the iso image** (`/sbin/losetup --list -O NAME,BACK-FILE | grep debian-10.9.0-amd64-netinst.iso`)
+
+Next define variables for the loop device path, image path, and mount path:
+
+```bash
+iso_path=$(/sbin/losetup --list -O NAME,BACK-FILE | grep debian-10.9.0-amd64-netinst.iso | tail -n 1)
+IFS=' ' read -r dev_path img_path <<< $iso_path
+mount_path=$([ -z "$img_path" ] || mount | grep $img_path | awk '{ print $3}')
+echo $dev_path
+echo $img_path
+echo $mount_path
+```
+
+**Double check that the three variables are not empty**, and that the`img_path`
+corresponds to the desired ISO image path.
 
 ### 1.c Create Guest VM Image and Install Guest OS
 
@@ -56,8 +78,8 @@ We will perform the installation without GUI and in a non-interactive way:
 proj=obiwan-dev
 qemu-img create -f qcow2 $proj.qcow2 32G
 
-virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian10-amd64 \
---disk path=$loop_path,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
+virt-install --virt-type kvm --name $proj --os-variant debian10 --location $mount_path \
+--disk path=$dev_path,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
 --initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
 ```
@@ -70,6 +92,15 @@ If the installation succeeds, the VM will boot into GRUB and you will be able
 to select Debian.
 
 #### Troubleshooting Errors
+<details>
+  <summary>Resolve <code class="docutils literal notranslate"><span class="pre">Failed to connect socket to '/var/run/libvirt/libvirt-sock': Permission denied</span></code></summary>
+
+<p></p>
+
+You are not in the libvirt group. Run `sudo usermod -aG libvirt $USER`. If this command was executed, you need to 
+log out and re-login.
+
+</details>
 
 <details>
   <summary>Resolve <code class="docutils literal notranslate"><span class="pre">Error validating install location: Distro 'debian10' does not exist in our dictionary</span></code></summary>
@@ -97,9 +128,7 @@ There are two ways to work around the problem:
 * (a) directly pass the ISO file path to `virt-install`.
 
 ```bash
-sudo umount debian10-amd64
-
-virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian-10.9.0-amd64-netinst.iso \
+virt-install --virt-type kvm --name $proj --os-variant debian10 --location $img_path \
 --disk path=$proj.qcow2,size=32 \
 --initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
@@ -109,8 +138,8 @@ virt-install --virt-type kvm --name $proj --os-variant debian10 --location debia
 * (b) directly specify the kernel and initrd file paths in the location argument:
 
 ```bash
-virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian10-amd64,kernel=install.amd/vmlinuz,initrd=install.amd/initrd.gz \
---disk path=$loop_path,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
+virt-install --virt-type kvm --name $proj --os-variant debian10 --location $mount_path,kernel=install.amd/vmlinuz,initrd=install.amd/initrd.gz \
+--disk path=$dev_path,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
 --initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
 ```
@@ -122,12 +151,30 @@ virt-install --virt-type kvm --name $proj --os-variant debian10 --location debia
   <summary>Resolve <code class="docutils literal notranslate"><span class="pre">unsupported configuration: CPU mode 'custom' for x86_64 kvm domain on x86_64 host is not supported by hypervisor</span></code></summary>
 
 <p></p>
+
 This happens because your username is not in the `kvm` or the `libvirt` group. Add it to the groups:
+
 ```bash
 sudo usermod -aG libvirt $USER
 sudo usermod -aG kvm $USER
 ````
+
 Then logout and re-login for it to take effect.
+
+</details>
+
+<details>
+  <summary>Resolve <code class="docutils literal notranslate"><span class="pre">ERROR    Cannot access storage file XXX: Permission denied</span></code></summary>
+  
+<p></p>
+
+This is because `libvirt-qemu` does not have the permission to access your home directory and the storage file. Fix by setting the ACL as follows:
+
+```bash
+setfacl -m u:libvirt-qemu:rx $HOME
+```
+
+Then run `getfacl -e $HOME`, which should show `libvirt-qemu` appearing as an allowed user.
 
 </details>
 
@@ -146,17 +193,25 @@ $ /sbin/losetup --list -O NAME,BACK-FILE | grep debian-10.9.0-amd64-netinst.iso
 /dev/loop9  /home/ryan/project/obi-wan/vm/debian-10.9.0-amd64-netinst.iso
 ```
 
-Then replace `/dev/loop0` in the command with the correct path. And retry `virt-install`:
-
+Replace the wrong loop device `/dev/loop0` with the correct one as shown in the 
+output (`/dev/loop9`). 
 ```bash
+
 virsh destroy $proj
 virsh undefine $proj
 rm -f $proj.qcow2
 qemu-img create -f qcow2 $proj.qcow2 32G
-loop=/dev/loop9
+iso_path=$(/sbin/losetup --list -O NAME,BACK-FILE | grep debian-10.9.0-amd64-netinst.iso | tail -n 1)
+IFS=' ' read -r dev_path img_path <<< $iso_path
+mount_path=$([ -z "$img_path" ] || mount | grep $img_path | awk '{ print $3}')
+echo $dev_path
+```
 
-virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian10-amd64 \
---disk path=$loop,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
+Retry `virt-install`:
+
+```bash
+virt-install --virt-type kvm --name $proj --os-variant debian10 --location $mount_path \
+--disk path=$dev_path,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
 --initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
 ```
@@ -164,7 +219,7 @@ virt-install --virt-type kvm --name $proj --os-variant debian10 --location debia
 If somehow this fix still does not work, the fallback solution that should work is directly execute `virt-install` with `sudo` and passing the `.iso` image instead of the mounted path:
 
 ```bash
-sudo virt-install --virt-type kvm --name $proj --os-variant debian10 --location debian-10.9.0-amd64-netinst.iso --disk path=$proj.qcow2,size=32 \
+sudo virt-install --virt-type kvm --name $proj --os-variant debian10 --location $img_path --disk path=$proj.qcow2,size=32 \
 --initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
 ```
