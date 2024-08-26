@@ -51,7 +51,7 @@ servers, it is likely that the image has been downloaded and mounted, so you
 should skip these three commands.
 
 ```bash
-wget https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-12.5.0-amd64-netinst.iso
+wget https://cdimage.debian.org/cdimage/archive/12.5.0/amd64/iso-cd/debian-12.5.0-amd64-netinst.iso
 mkdir debian12-5-amd64
 sudo mount -t iso9660 -r -o loop debian-12.5.0-amd64-netinst.iso debian12-5-amd64
 ```
