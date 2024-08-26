@@ -43,17 +43,14 @@ For example, you can change the hostname configuration as follows:
 + d-i netcfg/get_hostname string obiwan-dev
 ```
 
-### 1.b Download and Mount Guest OS Installation ISO
+### 1.b Download Guest OS Installation ISO
 
-If the OS image is not available, run the following command to download and
-mount the image. You need to have `sudo` permission for `mount`.  On the group
-servers, it is likely that the image has been downloaded and mounted, so you
-should skip these three commands.
+If the OS image is not available, run the following command to download the
+image. On the group servers, it is likely that the image has been downloaded
+and mounted, so you should skip this step.
 
 ```bash
-wget https://cdimage.debian.org/cdimage/archive/12.5.0/amd64/iso-cd/debian-12.5.0-amd64-netinst.iso
-mkdir debian12-5-amd64
-sudo mount -t iso9660 -r -o loop debian-12.5.0-amd64-netinst.iso debian12-5-amd64
+wget -O debian-12.5.0-amd64-netinst.iso https://cdimage.debian.org/cdimage/archive/12.5.0/amd64/iso-cd/debian-12.5.0-amd64-netinst.iso
 ```
 
 <details>
@@ -61,19 +58,16 @@ sudo mount -t iso9660 -r -o loop debian-12.5.0-amd64-netinst.iso debian12-5-amd6
 
 ```bash
 wget -O debian-10.9.0-amd64-netinst.iso https://cdimage.debian.org/cdimage/archive/10.9.0/amd64/iso-cd/debian-10.9.0-amd64-netinst.iso
-mkdir debian10-9-amd64
-sudo mount -t iso9660 -r -o loop debian-10.9.0-amd64-netinst.iso debian10-9-amd64
 ```
 
 </details>
 
-Next define variables for the loop device path, image path, and mount path:
+Next define variables for the OS version and image path, which will be used by later 
+commands.
 
 ```bash
 os_ver=debian12
-iso_path=$(/sbin/losetup --list -O NAME,BACK-FILE | grep debian-12.5.0-amd64-netinst.iso | tail -n 1)
-IFS=' ' read -r dev_path img_path <<< $iso_path
-mount_path=$([ -z "$img_path" ] || mount | grep $img_path | awk '{ print $3}')
+img_path=debian-12.5.0-amd64-netinst.iso    # or on group servers: /data/share/debian-12.5.0-amd64-netinst.iso
 ```
 
 <details>
@@ -81,35 +75,25 @@ mount_path=$([ -z "$img_path" ] || mount | grep $img_path | awk '{ print $3}')
 
 ```bash
 os_ver=debian10
-iso_path=$(/sbin/losetup --list -O NAME,BACK-FILE | grep debian-10.9.0-amd64-netinst.iso | tail -n 1)
-IFS=' ' read -r dev_path img_path <<< $iso_path
-mount_path=$([ -z "$img_path" ] || mount | grep $img_path | awk '{ print $3}')
+img_path=debian-10.9.0-amd64-netinst.iso   # or on group servers: /data/share/debian-10.9.0-amd64-netinst.iso
 ```
 
 </details>
 
-**Double check that the three variables are not empty** (they will be used in
-later commands), and that the`img_path` corresponds to the desired ISO image
-path.
-
-```bash
-echo $dev_path
-echo $img_path
-echo $mount_path
-```
-
 ### 1.c Create Guest VM Image and Install Guest OS
 
-We will perform the installation without GUI and in a non-interactive way:
+We will perform the installation without GUI and in a non-interactive way. The 
+VM image size is 16 GB. The VM is allocated with 8 GB memory and 2 vCPUs. You may 
+adjust the parameters depending on the available system resources.
 
 ```bash
 proj=obiwan-dev
-qemu-img create -f qcow2 $proj.qcow2 32G
+qemu-img create -f qcow2 $proj.qcow2 16G
 
-virt-install --virt-type kvm --name $proj --os-variant $os_ver --location $mount_path \
---disk path=$dev_path,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
---initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
---console pty,target_type=serial --extra-args "console=ttyS0" 
+virt-install --virt-type kvm --name $proj --os-variant $os_ver --location $img_path \
+  --disk path=$proj.qcow2 \
+  --initrd-inject=preseed.cfg --memory 8192 --vcpus=2 --graphics none \
+  --console pty,target_type=serial --extra-args "console=ttyS0" 
 ```
 
 The installation beginning will show a couple of error messages like 
@@ -138,8 +122,8 @@ This is because the default osinfo database in some distributions is outdated. Y
 
 ```bash
 sudo apt install osinfo-db-tools
-wget https://releases.pagure.org/libosinfo/osinfo-db-20200325.tar.xz
-osinfo-db-import -v osinfo-db-20200325.tar.xz
+wget https://releases.pagure.org/libosinfo/osinfo-db-20240523.tar.xz
+osinfo-db-import -v osinfo-db-20240523.tar.xz
 ```
 </details>
 
@@ -157,18 +141,36 @@ There are two ways to work around the problem:
 
 ```bash
 virt-install --virt-type kvm --name $proj --os-variant $os_ver --location $img_path \
---disk path=$proj.qcow2,size=32 \
---initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
+--disk path=$proj.qcow2 \
+--initrd-inject=preseed.cfg --memory 8192 --vcpus=2 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
 
 ```
 
-* (b) directly specify the kernel and initrd file paths in the location argument:
+* (b) directly specify the kernel and initrd file paths in the location argument.
+
+For this to work, you need to ensure the ISO file is mounted first.
 
 ```bash
+mkdir debian12-5-amd64
+sudo mount -t iso9660 -r -o loop debian-12.5.0-amd64-netinst.iso debian12-5-amd64
+mount_path=debian12-5-amd64
+```
+
+On group servers where the ISO file is already mounted in a shared location. You
+should skip the above command and run the following instead:
+
+```bash
+iso_path=$(/sbin/losetup --list -O NAME,BACK-FILE | grep debian-12.5.0-amd64-netinst.iso | tail -n 1)
+IFS=' ' read -r dev_path img_path <<< $iso_path
+mount_path=$([ -z "$img_path" ] || mount | grep $img_path | awk '{ print $3}')
+``` 
+
+```bash
+
 virt-install --virt-type kvm --name $proj --os-variant $os_ver --location $mount_path,kernel=install.amd/vmlinuz,initrd=install.amd/initrd.gz \
---disk path=$dev_path,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
---initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
+--disk path=$dev_path,device=cdrom,readonly=on --disk path=$proj.qcow2 \
+--initrd-inject=preseed.cfg --memory 8192 --vcpus=2 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
 ```
 
@@ -228,7 +230,7 @@ output (`/dev/loop9`).
 virsh destroy $proj
 virsh undefine $proj
 rm -f $proj.qcow2
-qemu-img create -f qcow2 $proj.qcow2 32G
+qemu-img create -f qcow2 $proj.qcow2 16G
 iso_path=$(/sbin/losetup --list -O NAME,BACK-FILE | grep debian-10.9.0-amd64-netinst.iso | tail -n 1)
 IFS=' ' read -r dev_path img_path <<< $iso_path
 mount_path=$([ -z "$img_path" ] || mount | grep $img_path | awk '{ print $3}')
@@ -239,7 +241,7 @@ Retry `virt-install`:
 
 ```bash
 virt-install --virt-type kvm --name $proj --os-variant $os_ver --location $mount_path \
---disk path=$dev_path,device=cdrom,readonly=on --disk path=$proj.qcow2,size=32 \
+--disk path=$dev_path,device=cdrom,readonly=on --disk path=$proj.qcow2 \
 --initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
 ```
@@ -247,7 +249,7 @@ virt-install --virt-type kvm --name $proj --os-variant $os_ver --location $mount
 If somehow this fix still does not work, the fallback solution that should work is directly execute `virt-install` with `sudo` and passing the `.iso` image instead of the mounted path:
 
 ```bash
-sudo virt-install --virt-type kvm --name $proj --os-variant $os_ver --location $img_path --disk path=$proj.qcow2,size=32 \
+sudo virt-install --virt-type kvm --name $proj --os-variant $os_ver --location $img_path --disk path=$proj.qcow2 \
 --initrd-inject=preseed.cfg --memory 16384 --vcpus=8 --graphics none \
 --console pty,target_type=serial --extra-args "console=ttyS0" 
 ```
