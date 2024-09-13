@@ -519,9 +519,23 @@ sudo umount $mount_dir
  
 
 
-## Choice 3: VirtualBox
- 
-Reference: 
+## Choice 3: Commercial Virtual Machine Tools
 
-* https://cs4118.github.io/dev-guides/debian-vm-setup.html 
+Though you are recommended to use `libvirt` or QEMU to run the virtual machine,
+here are some references for using commerical tools. These can potentially be
+helpful if you wish to test nested virtualizaiton.
+
+### VMware
+VMware Workstation Pro and VMware Fusion Pro are not free, but they are considered
+fast and easy to use. Some external resources (not tested by us) are available
+for setting up a Linux VM on VMware:
+* [Ubuntu](https://w4118.github.io/guides/vm-setup.html)
+* [Debian](https://cs4118.github.io/dev-guides/debian-vm-setup.html)
+Instructions for recompiling the kernel and booting it on VMware is available
+[here](https://cs4118.github.io/dev-guides/debian-kernel-compilation.html)
+
+Credit: COMS4118 Operating Systems I, Columbia University
+
+### VirtualBox
+VirtualBox is free of charge. Some resources for using them:
 * https://linuxize.com/post/how-to-install-virtualbox-guest-additions-on-debian-10/ 
