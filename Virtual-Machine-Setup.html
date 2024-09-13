@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Virtual Machine Setup &mdash; OrderLab Linux Development Guide v1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5cb08e4e"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Boot Virtual Machine with Stock Kernel" href="Boot-VM-Stock-Kernel.html" />
+    <link rel="prev" title="Intro" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            OrderLab Linux Development Guide
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Chapters:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Virtual Machine Setup</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#choice-1-libvirt-managed-kvm">Choice 1: libvirt Managed KVM</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#a-customize-preseed-file">1.a Customize Preseed File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#b-download-guest-os-installation-iso">1.b Download Guest OS Installation ISO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#c-create-guest-vm-image-and-install-guest-os">1.c Create Guest VM Image and Install Guest OS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#troubleshooting-errors">Troubleshooting Errors</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#d-manage-and-login-to-guest-vm">1.d Manage and Login to Guest VM</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#e-configure-networking">1.e Configure Networking</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#choice-2-raw-qemu">Choice 2: Raw QEMU</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#a-install-dependencies">2.a Install Dependencies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#b-create-rootfs">2.b Create Rootfs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#rootfs-setup-script">Rootfs Setup Script</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#manual-rootfs-setup">Manual Rootfs Setup</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#c-references">2.c References</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#choice-3-commercial-virtual-machine-tools">Choice 3: Commercial Virtual Machine Tools</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#vmware">VMware</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#virtualbox">VirtualBox</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="Boot-VM-Stock-Kernel.html">Boot Virtual Machine with Stock Kernel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Build-Custom-Kernel.html">Build Custom Kernel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Boot-and-Install-Custom-Kernel-in-VM.html">Boot and Install Custom Kernel in VM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="VM-Networking.html">Configure VM Networking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Modify-Kernel.html">Modify Kernel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Automation.html">Automation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Profiling.html">Performance Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="References.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OrderLab Linux Development Guide</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Virtual Machine Setup</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/OrderLab/linux-dev-bootcamp/blob/master/wiki/source/Virtual-Machine-Setup.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="virtual-machine-setup">
+<h1>Virtual Machine Setup<a class="headerlink" href="#virtual-machine-setup" title="Link to this heading"></a></h1>
+<p>It is recommended to use either <code class="docutils literal notranslate"><span class="pre">libvirt</span></code> management suite or raw QEMU for the Linux kernel development. The following instructions are based on Ubuntu 22.04.</p>
+<section id="choice-1-libvirt-managed-kvm">
+<h2>Choice 1: libvirt Managed KVM<a class="headerlink" href="#choice-1-libvirt-managed-kvm" title="Link to this heading"></a></h2>
+<p>The <a class="reference external" href="https://wiki.debian.org/libvirt">libvirt</a> (<code class="docutils literal notranslate"><span class="pre">virsh</span></code>) suite provides management of different vitalization solutions
+including KVM and Xen. It’s more handy to control the VM, networking, etc.,
+than typing raw QEMU commands each time.</p>
+<p>Install the <code class="docutils literal notranslate"><span class="pre">libvirt</span></code> toolchain:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>qemu-system<span class="w"> </span>qemu-kvm<span class="w"> </span>libvirt-daemon-system<span class="w"> </span>libvirt-clients<span class="w"> </span>virtinst<span class="w"> </span>ebtables<span class="w"> </span>dnsmasq
+</pre></div>
+</div>
+<p>Your username should be in the <code class="docutils literal notranslate"><span class="pre">libvirt</span></code> group and the <code class="docutils literal notranslate"><span class="pre">kvm</span></code> group. If not, add the
+user to two groups (and re-login for them to take effect):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>libvirt<span class="w"> </span><span class="nv">$USER</span>
+sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>kvm<span class="w"> </span><span class="nv">$USER</span>
+</pre></div>
+</div>
+<section id="a-customize-preseed-file">
+<h3>1.a Customize Preseed File<a class="headerlink" href="#a-customize-preseed-file" title="Link to this heading"></a></h3>
+<p>Use the pressed file <a class="reference external" href="https://github.com/OrderLab/linux-dev-bootcamp/blob/master/debian-preseed.cfg">debian-preseed.cfg</a> in this repo to
+automate the guest OS installation. Copy and customize it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>workspace<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>workspace
+git<span class="w"> </span>clone<span class="w"> </span>https://github.com/OrderLab/linux-dev-bootcamp.git<span class="w"> </span>bootcamp
+mkdir<span class="w"> </span>vm<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>vm
+cp<span class="w"> </span>../bootcamp/debian-preseed.cfg<span class="w"> </span>preseed.cfg
+</pre></div>
+</div>
+<p>Use an editor to change <code class="docutils literal notranslate"><span class="pre">preseed.cfg</span></code> such as the new user, initial password, hostname.
+For example, you can change the hostname configuration as follows:</p>
+<div class="highlight-diff notranslate"><div class="highlight"><pre><span></span><span class="gd">- d-i netcfg/get_hostname string order</span>
+<span class="gi">+ d-i netcfg/get_hostname string obiwan-dev</span>
+</pre></div>
+</div>
+</section>
+<section id="b-download-guest-os-installation-iso">
+<h3>1.b Download Guest OS Installation ISO<a class="headerlink" href="#b-download-guest-os-installation-iso" title="Link to this heading"></a></h3>
+<p>If the OS image is not available, run the following command to download the
+image. On the group servers, it is likely that the image has been downloaded
+and mounted, so you should skip this step.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>-O<span class="w"> </span>debian-12.5.0-amd64-netinst.iso<span class="w"> </span>https://cdimage.debian.org/cdimage/archive/12.5.0/amd64/iso-cd/debian-12.5.0-amd64-netinst.iso
+</pre></div>
+</div>
+<details>
+  <summary>For Debian 10</summary>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>-O<span class="w"> </span>debian-10.9.0-amd64-netinst.iso<span class="w"> </span>https://cdimage.debian.org/cdimage/archive/10.9.0/amd64/iso-cd/debian-10.9.0-amd64-netinst.iso
+</pre></div>
+</div>
+</details>
+<p>Next define variables for the OS version and image path, which will be used by later
+commands.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">os_ver</span><span class="o">=</span>debian12
+<span class="nv">img_path</span><span class="o">=</span>debian-12.5.0-amd64-netinst.iso<span class="w">    </span><span class="c1"># or on group servers: /data/share/debian-12.5.0-amd64-netinst.iso</span>
+</pre></div>
+</div>
+<details>
+  <summary>For Debian 10</summary>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">os_ver</span><span class="o">=</span>debian10
+<span class="nv">img_path</span><span class="o">=</span>debian-10.9.0-amd64-netinst.iso<span class="w">   </span><span class="c1"># or on group servers: /data/share/debian-10.9.0-amd64-netinst.iso</span>
+</pre></div>
+</div>
+</details>
+</section>
+<section id="c-create-guest-vm-image-and-install-guest-os">
+<h3>1.c Create Guest VM Image and Install Guest OS<a class="headerlink" href="#c-create-guest-vm-image-and-install-guest-os" title="Link to this heading"></a></h3>
+<p>We will perform the installation without GUI and in a non-interactive way. The
+VM image size is 16 GB. The VM is allocated with 8 GB memory and 2 vCPUs. You may
+adjust the parameters depending on the available system resources.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">proj</span><span class="o">=</span>obiwan-dev
+qemu-img<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>qcow2<span class="w"> </span><span class="nv">$proj</span>.qcow2<span class="w"> </span>16G
+
+virt-install<span class="w"> </span>--virt-type<span class="w"> </span>kvm<span class="w"> </span>--name<span class="w"> </span><span class="nv">$proj</span><span class="w"> </span>--os-variant<span class="w"> </span><span class="nv">$os_ver</span><span class="w"> </span>--location<span class="w"> </span><span class="nv">$img_path</span><span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--disk<span class="w"> </span><span class="nv">path</span><span class="o">=</span><span class="nv">$proj</span>.qcow2<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--initrd-inject<span class="o">=</span>preseed.cfg<span class="w"> </span>--memory<span class="w"> </span><span class="m">8192</span><span class="w"> </span>--vcpus<span class="o">=</span><span class="m">2</span><span class="w"> </span>--graphics<span class="w"> </span>none<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--console<span class="w"> </span>pty,target_type<span class="o">=</span>serial<span class="w"> </span>--extra-args<span class="w"> </span><span class="s2">&quot;console=ttyS0&quot;</span><span class="w"> </span>
+</pre></div>
+</div>
+<p>The installation beginning will show a couple of error messages like
+<code class="docutils literal notranslate"><span class="pre">mount:</span> <span class="pre">mounting</span> <span class="pre">/dev/vda</span> <span class="pre">on</span> <span class="pre">/media</span> <span class="pre">failed:</span> <span class="pre">Invalid</span> <span class="pre">argument</span></code>. Those
+are benign errors due to the empty disk image.</p>
+<p>If the installation succeeds, the VM will boot into GRUB so you can select Debian or
+it will directly boot into a login screen. To exit the login screen, press <code class="docutils literal notranslate"><span class="pre">Ctrl</span> <span class="pre">+</span> <span class="pre">]</span></code></p>
+<section id="troubleshooting-errors">
+<h4>Troubleshooting Errors<a class="headerlink" href="#troubleshooting-errors" title="Link to this heading"></a></h4>
+<details>
+  <summary>Resolve <code class="docutils literal notranslate"><span class="pre">Failed to connect socket to '/var/run/libvirt/libvirt-sock': Permission denied</span></code></summary>
+<p></p>
+<p>You are not in the libvirt group. Run <code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">usermod</span> <span class="pre">-aG</span> <span class="pre">libvirt</span> <span class="pre">$USER</span></code>. If this command was executed, you need to
+log out and re-login.</p>
+</details>
+<details>
+  <summary>Resolve <code class="docutils literal notranslate"><span class="pre">Error validating install location: Distro 'debian10' does not exist in our dictionary</span></code></summary>
+<p></p>
+This is because the default osinfo database in some distributions is outdated. You can update the osinfo database as follows:
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>osinfo-db-tools
+wget<span class="w"> </span>https://releases.pagure.org/libosinfo/osinfo-db-20240523.tar.xz
+osinfo-db-import<span class="w"> </span>-v<span class="w"> </span>osinfo-db-20240523.tar.xz
+</pre></div>
+</div>
+</details>
+<details>
+  <summary>Resolve <code class="docutils literal notranslate"><span class="pre">Couldn't find kernel for install tree</span></code></summary>
+<p></p>
+This error occurs due to changes in logic of how location argument is handled in 
+recent versions (e.g., `4.0.0` on Ubuntu 22) of `virt-install` compared to older 
+versions (e.g., `1.5.1` on Ubuntu 18). 
+<p>There are two ways to work around the problem:</p>
+<ul class="simple">
+<li><p>(a) directly pass the ISO file path to <code class="docutils literal notranslate"><span class="pre">virt-install</span></code>.</p></li>
+</ul>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>virt-install<span class="w"> </span>--virt-type<span class="w"> </span>kvm<span class="w"> </span>--name<span class="w"> </span><span class="nv">$proj</span><span class="w"> </span>--os-variant<span class="w"> </span><span class="nv">$os_ver</span><span class="w"> </span>--location<span class="w"> </span><span class="nv">$img_path</span><span class="w"> </span><span class="se">\</span>
+--disk<span class="w"> </span><span class="nv">path</span><span class="o">=</span><span class="nv">$proj</span>.qcow2<span class="w"> </span><span class="se">\</span>
+--initrd-inject<span class="o">=</span>preseed.cfg<span class="w"> </span>--memory<span class="w"> </span><span class="m">8192</span><span class="w"> </span>--vcpus<span class="o">=</span><span class="m">2</span><span class="w"> </span>--graphics<span class="w"> </span>none<span class="w"> </span><span class="se">\</span>
+--console<span class="w"> </span>pty,target_type<span class="o">=</span>serial<span class="w"> </span>--extra-args<span class="w"> </span><span class="s2">&quot;console=ttyS0&quot;</span><span class="w"> </span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p>(b) directly specify the kernel and initrd file paths in the location argument.</p></li>
+</ul>
+<p>For this to work, you need to ensure the ISO file is mounted first.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mkdir<span class="w"> </span>debian12-5-amd64
+sudo<span class="w"> </span>mount<span class="w"> </span>-t<span class="w"> </span>iso9660<span class="w"> </span>-r<span class="w"> </span>-o<span class="w"> </span>loop<span class="w"> </span>debian-12.5.0-amd64-netinst.iso<span class="w"> </span>debian12-5-amd64
+<span class="nv">mount_path</span><span class="o">=</span>debian12-5-amd64
+</pre></div>
+</div>
+<p>On group servers where the ISO file is already mounted in a shared location. You
+should skip the above command and run the following instead:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">iso_path</span><span class="o">=</span><span class="k">$(</span>/sbin/losetup<span class="w"> </span>--list<span class="w"> </span>-O<span class="w"> </span>NAME,BACK-FILE<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>debian-12.5.0-amd64-netinst.iso<span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span>
+<span class="nv">IFS</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="w"> </span><span class="nb">read</span><span class="w"> </span>-r<span class="w"> </span>dev_path<span class="w"> </span>img_path<span class="w"> </span><span class="o">&lt;&lt;&lt;</span><span class="w"> </span><span class="nv">$iso_path</span>
+<span class="nv">mount_path</span><span class="o">=</span><span class="k">$(</span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$img_path</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>mount<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="nv">$img_path</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{ print $3}&#39;</span><span class="k">)</span>
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>virt-install<span class="w"> </span>--virt-type<span class="w"> </span>kvm<span class="w"> </span>--name<span class="w"> </span><span class="nv">$proj</span><span class="w"> </span>--os-variant<span class="w"> </span><span class="nv">$os_ver</span><span class="w"> </span>--location<span class="w"> </span><span class="nv">$mount_path</span>,kernel<span class="o">=</span>install.amd/vmlinuz,initrd<span class="o">=</span>install.amd/initrd.gz<span class="w"> </span><span class="se">\</span>
+--disk<span class="w"> </span><span class="nv">path</span><span class="o">=</span><span class="nv">$dev_path</span>,device<span class="o">=</span>cdrom,readonly<span class="o">=</span>on<span class="w"> </span>--disk<span class="w"> </span><span class="nv">path</span><span class="o">=</span><span class="nv">$proj</span>.qcow2<span class="w"> </span><span class="se">\</span>
+--initrd-inject<span class="o">=</span>preseed.cfg<span class="w"> </span>--memory<span class="w"> </span><span class="m">8192</span><span class="w"> </span>--vcpus<span class="o">=</span><span class="m">2</span><span class="w"> </span>--graphics<span class="w"> </span>none<span class="w"> </span><span class="se">\</span>
+--console<span class="w"> </span>pty,target_type<span class="o">=</span>serial<span class="w"> </span>--extra-args<span class="w"> </span><span class="s2">&quot;console=ttyS0&quot;</span><span class="w"> </span>
+</pre></div>
+</div>
+</details>
+<details>
+  <summary>Resolve <code class="docutils literal notranslate"><span class="pre">unsupported configuration: CPU mode 'custom' for x86_64 kvm domain on x86_64 host is not supported by hypervisor</span></code></summary>
+<p></p>
+<p>This happens because your username is not in the <code class="docutils literal notranslate"><span class="pre">kvm</span></code> or the <code class="docutils literal notranslate"><span class="pre">libvirt</span></code> group. Add it to the groups:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>libvirt<span class="w"> </span><span class="nv">$USER</span>
+sudo<span class="w"> </span>usermod<span class="w"> </span>-aG<span class="w"> </span>kvm<span class="w"> </span><span class="nv">$USER</span>
+</pre></div>
+</div>
+<p>Then logout and re-login for it to take effect.</p>
+</details>
+<details>
+  <summary>Resolve <code class="docutils literal notranslate"><span class="pre">ERROR    Cannot access storage file XXX: Permission denied</span></code></summary>
+<p></p>
+<p>This is because <code class="docutils literal notranslate"><span class="pre">libvirt-qemu</span></code> does not have the permission to access your home directory and the storage file. Fix by setting the ACL as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>setfacl<span class="w"> </span>-m<span class="w"> </span>u:libvirt-qemu:rx<span class="w"> </span><span class="nv">$HOME</span>
+</pre></div>
+</div>
+<p>Then run <code class="docutils literal notranslate"><span class="pre">getfacl</span> <span class="pre">-e</span> <span class="pre">$HOME</span></code>, which should show <code class="docutils literal notranslate"><span class="pre">libvirt-qemu</span></code> appearing as an allowed user.</p>
+</details>
+<details>
+  <summary>Resolve <code class="docutils literal notranslate"><span class="pre">No common CD-ROM drive was detected</span></code></summary>
+<p></p>
+If you encounter the above error message
+<p><img alt="No CDROM" src="_images/no-cdrom-error.png" /></p>
+<p>This is likely because of the wrong loop device (<code class="docutils literal notranslate"><span class="pre">/dev/loop0</span></code>) used in the <code class="docutils literal notranslate"><span class="pre">virt-install</span></code> command. Find the correct device path:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>/sbin/losetup<span class="w"> </span>--list<span class="w"> </span>-O<span class="w"> </span>NAME,BACK-FILE<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>debian-10.9.0-amd64-netinst.iso
+/dev/loop9<span class="w">  </span>/home/ryan/project/obi-wan/vm/debian-10.9.0-amd64-netinst.iso
+</pre></div>
+</div>
+<p>Replace the wrong loop device <code class="docutils literal notranslate"><span class="pre">/dev/loop0</span></code> with the correct one as shown in the
+output (<code class="docutils literal notranslate"><span class="pre">/dev/loop9</span></code>).</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>virsh<span class="w"> </span>destroy<span class="w"> </span><span class="nv">$proj</span>
+virsh<span class="w"> </span>undefine<span class="w"> </span><span class="nv">$proj</span>
+rm<span class="w"> </span>-f<span class="w"> </span><span class="nv">$proj</span>.qcow2
+qemu-img<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>qcow2<span class="w"> </span><span class="nv">$proj</span>.qcow2<span class="w"> </span>16G
+<span class="nv">iso_path</span><span class="o">=</span><span class="k">$(</span>/sbin/losetup<span class="w"> </span>--list<span class="w"> </span>-O<span class="w"> </span>NAME,BACK-FILE<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>debian-10.9.0-amd64-netinst.iso<span class="w"> </span><span class="p">|</span><span class="w"> </span>tail<span class="w"> </span>-n<span class="w"> </span><span class="m">1</span><span class="k">)</span>
+<span class="nv">IFS</span><span class="o">=</span><span class="s1">&#39; &#39;</span><span class="w"> </span><span class="nb">read</span><span class="w"> </span>-r<span class="w"> </span>dev_path<span class="w"> </span>img_path<span class="w"> </span><span class="o">&lt;&lt;&lt;</span><span class="w"> </span><span class="nv">$iso_path</span>
+<span class="nv">mount_path</span><span class="o">=</span><span class="k">$(</span><span class="o">[</span><span class="w"> </span>-z<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$img_path</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">||</span><span class="w"> </span>mount<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="nv">$img_path</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{ print $3}&#39;</span><span class="k">)</span>
+<span class="nb">echo</span><span class="w"> </span><span class="nv">$dev_path</span>
+</pre></div>
+</div>
+<p>Retry <code class="docutils literal notranslate"><span class="pre">virt-install</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>virt-install<span class="w"> </span>--virt-type<span class="w"> </span>kvm<span class="w"> </span>--name<span class="w"> </span><span class="nv">$proj</span><span class="w"> </span>--os-variant<span class="w"> </span><span class="nv">$os_ver</span><span class="w"> </span>--location<span class="w"> </span><span class="nv">$mount_path</span><span class="w"> </span><span class="se">\</span>
+--disk<span class="w"> </span><span class="nv">path</span><span class="o">=</span><span class="nv">$dev_path</span>,device<span class="o">=</span>cdrom,readonly<span class="o">=</span>on<span class="w"> </span>--disk<span class="w"> </span><span class="nv">path</span><span class="o">=</span><span class="nv">$proj</span>.qcow2<span class="w"> </span><span class="se">\</span>
+--initrd-inject<span class="o">=</span>preseed.cfg<span class="w"> </span>--memory<span class="w"> </span><span class="m">16384</span><span class="w"> </span>--vcpus<span class="o">=</span><span class="m">8</span><span class="w"> </span>--graphics<span class="w"> </span>none<span class="w"> </span><span class="se">\</span>
+--console<span class="w"> </span>pty,target_type<span class="o">=</span>serial<span class="w"> </span>--extra-args<span class="w"> </span><span class="s2">&quot;console=ttyS0&quot;</span><span class="w"> </span>
+</pre></div>
+</div>
+<p>If somehow this fix still does not work, the fallback solution that should work is directly execute <code class="docutils literal notranslate"><span class="pre">virt-install</span></code> with <code class="docutils literal notranslate"><span class="pre">sudo</span></code> and passing the <code class="docutils literal notranslate"><span class="pre">.iso</span></code> image instead of the mounted path:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>virt-install<span class="w"> </span>--virt-type<span class="w"> </span>kvm<span class="w"> </span>--name<span class="w"> </span><span class="nv">$proj</span><span class="w"> </span>--os-variant<span class="w"> </span><span class="nv">$os_ver</span><span class="w"> </span>--location<span class="w"> </span><span class="nv">$img_path</span><span class="w"> </span>--disk<span class="w"> </span><span class="nv">path</span><span class="o">=</span><span class="nv">$proj</span>.qcow2<span class="w"> </span><span class="se">\</span>
+--initrd-inject<span class="o">=</span>preseed.cfg<span class="w"> </span>--memory<span class="w"> </span><span class="m">16384</span><span class="w"> </span>--vcpus<span class="o">=</span><span class="m">8</span><span class="w"> </span>--graphics<span class="w"> </span>none<span class="w"> </span><span class="se">\</span>
+--console<span class="w"> </span>pty,target_type<span class="o">=</span>serial<span class="w"> </span>--extra-args<span class="w"> </span><span class="s2">&quot;console=ttyS0&quot;</span><span class="w"> </span>
+</pre></div>
+</div>
+</details>
+<br>
+</section>
+</section>
+<section id="d-manage-and-login-to-guest-vm">
+<h3>1.d Manage and Login to Guest VM<a class="headerlink" href="#d-manage-and-login-to-guest-vm" title="Link to this heading"></a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">virsh</span></code> to list, start, shutdown, login to the create guest VM.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>virsh<span class="w"> </span>list<span class="w"> </span>--all
+<span class="w"> </span>Id<span class="w">    </span>Name<span class="w">                           </span>State
+----------------------------------------------------
+<span class="w"> </span>-<span class="w">     </span>obiwan-dev<span class="w">                     </span>shut<span class="w"> </span>off
+$<span class="w"> </span>virsh<span class="w"> </span>start<span class="w"> </span>obiwan-dev
+$<span class="w"> </span>virsh<span class="w"> </span>console<span class="w"> </span>obiwan-dev
+</pre></div>
+</div>
+<p>The last two steps can be combined into one step of <code class="docutils literal notranslate"><span class="pre">virsh</span> <span class="pre">start</span> <span class="pre">obiwan-dev</span> <span class="pre">--console</span></code>.</p>
+<p>To gracefully shutdown the VM, run <code class="docutils literal notranslate"><span class="pre">virsh</span> <span class="pre">shutdown</span> <span class="pre">obiwan-dev</span></code>. If the graceful
+shutdown is not successful, run <code class="docutils literal notranslate"><span class="pre">virsh</span> <span class="pre">destroy</span> <span class="pre">obiwan-dev</span></code>. Destroy does <em>not</em>
+delete the virtual disk file. It only powers off the VM. To delete the VM,
+run <code class="docutils literal notranslate"><span class="pre">virsh</span> <span class="pre">undefine</span> <span class="pre">obiwan-dev</span></code> and manually delete the disk image file.</p>
+<p>Install SSH server, update the VM hostname so that we can SSH into the VM later
+using the hostname.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>virsh<span class="w"> </span>console<span class="w"> </span>obiwan-dev
+Connected<span class="w"> </span>to<span class="w"> </span>domain<span class="w"> </span>psbox-dev
+Escape<span class="w"> </span>character<span class="w"> </span>is<span class="w"> </span>^<span class="o">]</span>
+
+order<span class="w"> </span>login:<span class="w"> </span>root
+Password:
+Last<span class="w"> </span>login:<span class="w"> </span>Wed<span class="w"> </span>Jun<span class="w">  </span><span class="m">9</span><span class="w"> </span><span class="m">03</span>:53:39<span class="w"> </span>EDT<span class="w"> </span><span class="m">2021</span><span class="w"> </span>on<span class="w"> </span>ttyS0
+...
+root@order:~#<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>openssh-server
+root@order:~#<span class="w"> </span>hostnamectl<span class="w"> </span>set-hostname<span class="w"> </span>obiwan-dev
+</pre></div>
+</div>
+</section>
+<section id="e-configure-networking">
+<h3>1.e Configure Networking<a class="headerlink" href="#e-configure-networking" title="Link to this heading"></a></h3>
+<p>The default bridge networking created by libvirt should work directly for most cases. If
+not, refer to the manual networking <a class="reference external" href="https://wiki.debian.org/KVM#Setting_up_bridge_networking">configuration document</a>.
+The default NATed, briedged network that libvirt provides is called <code class="docutils literal notranslate"><span class="pre">default</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>virsh<span class="w"> </span>net-list
+<span class="w"> </span>Name<span class="w">                 </span>State<span class="w">      </span>Autostart<span class="w">     </span>Persistent
+----------------------------------------------------------
+<span class="w"> </span>default<span class="w">              </span>active<span class="w">     </span>yes<span class="w">           </span>yes
+$<span class="w"> </span>virsh<span class="w"> </span>net-info<span class="w"> </span>default
+Name:<span class="w">           </span>default
+UUID:<span class="w">           </span>02cc5180-60e3-429a-af96-d1e08cb0a8a4
+Active:<span class="w">         </span>yes
+Persistent:<span class="w">     </span>yes
+Autostart:<span class="w">      </span>yes
+Bridge:<span class="w">         </span>virbr0
+$<span class="w"> </span>virsh<span class="w"> </span>net-dhcp-leases<span class="w"> </span>default
+<span class="w"> </span>Expiry<span class="w"> </span>Time<span class="w">          </span>MAC<span class="w"> </span>address<span class="w">        </span>Protocol<span class="w">  </span>IP<span class="w"> </span>address<span class="w">                </span>Hostname<span class="w">        </span>Client<span class="w"> </span>ID<span class="w"> </span>or<span class="w"> </span>DUID
+-------------------------------------------------------------------------------------------------------------------
+</pre></div>
+</div>
+<p>A DHCP service is provided to the guest VMs via <code class="docutils literal notranslate"><span class="pre">dnsmasq</span></code>.  The VMs using this network
+will end up in <code class="docutils literal notranslate"><span class="pre">192.168.122.1/24</span></code> (or <code class="docutils literal notranslate"><span class="pre">192.168.123.1/24</span></code>). This network is not
+automatically started. To start it use: <code class="docutils literal notranslate"><span class="pre">virsh</span> <span class="pre">net-start</span> <span class="pre">default</span></code>.</p>
+<p>Because the VMs get IPs from the DHCP service, their IPs can change upon reboots
+or when the DHCP lease expires. As a result, we will need to double check the guest
+VM ip address each time to ssh into the VM. We can configure the network manager
+to assign static IP to a VM.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>virsh<span class="w"> </span>dumpxml<span class="w"> </span>obiwan-dev<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span><span class="s1">&#39;&lt;mac&#39;</span>
+$<span class="w"> </span>virsh<span class="w"> </span>net-edit<span class="w"> </span>default
+</pre></div>
+</div>
+<p>Add a <code class="docutils literal notranslate"><span class="pre">&lt;host&gt;</span></code> entry to the <code class="docutils literal notranslate"><span class="pre">&lt;dhcp&gt;</span></code> element. Use the VM MAC address from the <code class="docutils literal notranslate"><span class="pre">virsh</span> <span class="pre">dumpxml</span></code>
+command in the <code class="docutils literal notranslate"><span class="pre">mac</span></code> field and any static IP in the range to assign to the VM.</p>
+<div class="highlight-xml notranslate"><div class="highlight"><pre><span></span><span class="w">    </span>...
+<span class="w">    </span><span class="nt">&lt;dhcp&gt;</span>
+<span class="w">      </span><span class="nt">&lt;range</span><span class="w"> </span><span class="na">start=</span><span class="s">&#39;192.168.123.2&#39;</span><span class="w"> </span><span class="na">end=</span><span class="s">&#39;192.168.123.254&#39;</span><span class="nt">/&gt;</span>
+<span class="w">      </span><span class="nt">&lt;host</span><span class="w"> </span><span class="na">mac=</span><span class="s">&#39;52:54:00:f0:8b:6c&#39;</span><span class="w"> </span><span class="na">ip=</span><span class="s">&#39;192.168.123.2&#39;</span><span class="nt">/&gt;</span>
+<span class="w">    </span><span class="nt">&lt;/dhcp&gt;</span>
+<span class="w">    </span>...
+</pre></div>
+</div>
+<p>Then restart the virtual network:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>virsh<span class="w"> </span>net-destroy<span class="w"> </span>default
+$<span class="w"> </span>virsh<span class="w"> </span>net-start<span class="w"> </span>default
+$<span class="w"> </span>virsh<span class="w"> </span>net-dhcp-leases<span class="w"> </span>default
+<span class="w"> </span>Expiry<span class="w"> </span>Time<span class="w">          </span>MAC<span class="w"> </span>address<span class="w">        </span>Protocol<span class="w">  </span>IP<span class="w"> </span>address<span class="w">                </span>Hostname<span class="w">        </span>Client<span class="w"> </span>ID<span class="w"> </span>or<span class="w"> </span>DUID
+-------------------------------------------------------------------------------------------------------------------
+<span class="w"> </span><span class="m">2021</span>-06-09<span class="w"> </span><span class="m">06</span>:10:05<span class="w">  </span><span class="m">52</span>:54:00:f0:8b:6c<span class="w">  </span>ipv4<span class="w">      </span><span class="m">192</span>.168.123.2/24<span class="w">          </span>obiwan-dev<span class="w">      </span>ff:00:f0:8b:6c:00:01:00:01:28:52:95:00:52:54:00:f0:8b:6c
+</pre></div>
+</div>
+<p>Now, you can SSH into the guest VM (assuming SSH server is running the credentials
+have been set up correctly) with the static IP: <code class="docutils literal notranslate"><span class="pre">ssh</span> <span class="pre">192.168.123.2</span></code>.</p>
+<p>To make it even more conveniently SSH into the guest VM, we would like to
+directly use the guest VM’s hostname. For a single VM, we can modify the
+<code class="docutils literal notranslate"><span class="pre">/etc/hosts</span></code> file. But more generally, it is recommended to use the
+libvirt NSS module, which will allow <code class="docutils literal notranslate"><span class="pre">ssh</span></code> to consult <code class="docutils literal notranslate"><span class="pre">libvirt</span></code> with
+guest VM hostname.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>libnss-libvirt
+</pre></div>
+</div>
+<p>The usage of this module is simple: follow the <a class="reference external" href="https://libvirt.org/nss.html">NSS module documentation</a>.
+In particular, just add <code class="docutils literal notranslate"><span class="pre">libvirt</span></code> to the <code class="docutils literal notranslate"><span class="pre">hosts</span></code> line into the <code class="docutils literal notranslate"><span class="pre">/etc/nsswitch.conf</span></code> file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hosts</span><span class="p">:</span>          <span class="n">files</span> <span class="n">libvirt</span> <span class="n">dns</span>
+</pre></div>
+</div>
+<p>Now, we can do directly SSH with the VM’s hostname:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>ssh<span class="w"> </span>obiwan-dev
+</pre></div>
+</div>
+</section>
+</section>
+<section id="choice-2-raw-qemu">
+<h2>Choice 2: Raw QEMU<a class="headerlink" href="#choice-2-raw-qemu" title="Link to this heading"></a></h2>
+<p>You can also directly use QEMU. Compared to libvirt, it is more cumbersome to type the full QEMU command each time. The raw QEMU commands do give you direct control. However, there is no fundamental difference between the two in terms of their underlying capabilities. The VM images libvirt creates and manages can also be used directly by raw QEMU commands. libvirt provides handy interfaces such as persisting the VM profiles and network management. Thus, it is our recommended choice.</p>
+<section id="a-install-dependencies">
+<h3>2.a Install Dependencies<a class="headerlink" href="#a-install-dependencies" title="Link to this heading"></a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w">  </span>debootstrap<span class="w"> </span>libguestfs-tools<span class="w"> </span>qemu-system-x86
+</pre></div>
+</div>
+</section>
+<section id="b-create-rootfs">
+<h3>2.b Create Rootfs<a class="headerlink" href="#b-create-rootfs" title="Link to this heading"></a></h3>
+<p>QEMU can boot a kernel image directly, e.g.,</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>qemu-system-x86_64<span class="w"> </span>-kernel<span class="w"> </span>/boot/vmlinuz-<span class="sb">`</span>uname<span class="w"> </span>-r<span class="sb">`</span>
+</pre></div>
+</div>
+<p>The missing part is a root file system, which we need to create.</p>
+<p>Basically, we will create an empty QEMU image first, then format it to an ext2 file system, mount the image file to a temporary directory, and then install a Debian 10 (buster) distribution into the temporary directory using a tool called debootstrap (https://manpages.debian.org/unstable/debootstrap/debootstrap.8.en.html). We use Debian as the base system because it is stable and only contains the essential files, compared to a feature-rich Ubuntu system (debootstrap can also install an Ubuntu image if needed).</p>
+<section id="rootfs-setup-script">
+<h4>Rootfs Setup Script<a class="headerlink" href="#rootfs-setup-script" title="Link to this heading"></a></h4>
+<p>A root fs bootstrap script is provided, which will automatically create a
+debian buster based root file system with the setup for user accounts,
+network, common packages, etc.</p>
+<p>The usage is simply: <code class="docutils literal notranslate"><span class="pre">./bootstrap.sh</span> <span class="pre">[image_file]</span> <span class="pre">[mount_dir]</span></code></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>./bootstrap.sh<span class="w"> </span>my-linux.img<span class="w"> </span>qemu-mount.dir
+</pre></div>
+</div>
+</section>
+<section id="manual-rootfs-setup">
+<h4>Manual Rootfs Setup<a class="headerlink" href="#manual-rootfs-setup" title="Link to this heading"></a></h4>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">image_file</span><span class="o">=</span>my-linux.img
+<span class="nv">mount_dir</span><span class="o">=</span>qemu-mount.dir
+<span class="nv">new_user</span><span class="o">=</span><span class="nv">$USER</span>
+<span class="nv">new_host</span><span class="o">=</span>debian-buster
+
+qemu-img<span class="w"> </span>create<span class="w"> </span><span class="nv">$image_file</span><span class="w"> </span>8g
+mkfs.ext2<span class="w"> </span><span class="nv">$image_file</span>
+mkdir<span class="w"> </span>-p<span class="w"> </span><span class="nv">$mount_dir</span>
+sudo<span class="w"> </span>mount<span class="w"> </span>-o<span class="w"> </span>loop<span class="w">  </span><span class="nv">$image_file</span><span class="w"> </span><span class="nv">$mount_dir</span>
+sudo<span class="w"> </span>debootstrap<span class="w"> </span>--arch<span class="w"> </span>amd64<span class="w"> </span>buster<span class="w"> </span><span class="nv">$mount_dir</span>
+</pre></div>
+</div>
+<p>Before we unmount the directory, we should first set the root user password and create a new user using chroot. Otherwise, the root user is locked by default from Debian 10 and we will not be able to login because the root user is locked and its password is not set.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">echo</span><span class="w"> </span><span class="s1">&#39;root:root&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>chroot<span class="w"> </span><span class="nv">$mount_dir</span><span class="w"> </span>chpasswd
+sudo<span class="w"> </span>chroot<span class="w"> </span><span class="nv">$mount_dir</span><span class="w"> </span>/bin/bash<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;useradd </span><span class="nv">$new_user</span><span class="s2"> -m -s /bin/bash&quot;</span>
+<span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$new_user</span><span class="s2">:</span><span class="nv">$new_user</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>chroot<span class="w"> </span><span class="nv">$mount_dir</span><span class="w"> </span>chpasswd
+</pre></div>
+</div>
+<p><strong>Update hostname, hostsfile and network interfaces</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cat<span class="w"> </span><span class="s">&lt;&lt; EOF | sudo chroot $mount_dir</span>
+<span class="s">echo $new_host &gt; /etc/hostname</span>
+<span class="s">sed -i &quot;2i127.0.1.1 $new_host&quot; /etc/hosts</span>
+<span class="s">echo &quot;auto lo&quot; &gt;&gt; /etc/network/interfaces</span>
+<span class="s">echo &quot;iface lo inet loopback&quot; &gt;&gt; /etc/network/interfaces</span>
+<span class="s">EOF</span>
+</pre></div>
+</div>
+<p><strong>Remount root filesystem as writable</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cat<span class="w"> </span><span class="s">&lt;&lt; EOF | sudo tee &quot;$mount_dir/etc/fstab&quot;</span>
+<span class="s">/dev/sda / ext4 errors=remount-ro,acl 0 1</span>
+<span class="s">EOF</span>
+</pre></div>
+</div>
+<p><strong>Install Common Packages</strong></p>
+<p>Common packages like <code class="docutils literal notranslate"><span class="pre">ssh</span></code> and <code class="docutils literal notranslate"><span class="pre">sudo</span></code> are not installed in the default Debian
+image. We will need to use <code class="docutils literal notranslate"><span class="pre">apt-get</span></code> to install them. The packages can be
+installed in the jailed (chroot) environment through the host without booting
+the VM image.</p>
+<p>To do so, however, we cannot simply execute <code class="docutils literal notranslate"><span class="pre">chroot</span></code> and then <code class="docutils literal notranslate"><span class="pre">apt-get</span></code> at
+this point. We need to mount device files and proc from the host OS <strong>temporarily</strong>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>cp<span class="w"> </span>/etc/resolv.conf<span class="w"> </span><span class="nv">$mount_dir</span>/etc/resolv.conf
+sudo<span class="w"> </span>mount<span class="w"> </span>-o<span class="w"> </span>bind,ro<span class="w"> </span>/dev<span class="w"> </span><span class="nv">$mount_dir</span>/dev
+sudo<span class="w"> </span>mount<span class="w"> </span>-o<span class="w"> </span>bind,ro<span class="w"> </span>/dev/pts<span class="w"> </span><span class="nv">$mount_dir</span>/dev/pts
+sudo<span class="w"> </span>mount<span class="w"> </span>-t<span class="w"> </span>proc<span class="w"> </span>none<span class="w"> </span><span class="nv">$mount_dir</span>/proc
+</pre></div>
+</div>
+<p>Note that we mount the /dev as read-only to prevent the jailed commands
+from modifying the device files in some scenarios.</p>
+<p>Now we can install the packages through two ways:</p>
+<ol class="arabic simple">
+<li><p>Interactive shell:</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span><span class="nv">LANG</span><span class="o">=</span>C.UTF-8<span class="w"> </span>chroot<span class="w"> </span>/bin/bash<span class="w"> </span>--login
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Command line (script):</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>cat<span class="w"> </span><span class="s">&lt;&lt; EOF | sudo LANG=C.UTF-8 chroot $mount_dir </span>
+<span class="s">apt-get update</span>
+<span class="s">apt-get install -y sudo ssh</span>
+<span class="s">apt-get install -y ifupdown net-tools network-manager</span>
+<span class="s">apt-get install -y curl wget</span>
+<span class="s">EOF</span>
+</pre></div>
+</div>
+<p><strong>Unmount the device files and proc</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>umount<span class="w"> </span><span class="nv">$mount_dir</span>/dev/pts
+sudo<span class="w"> </span>umount<span class="w"> </span><span class="nv">$mount_dir</span>/dev
+sudo<span class="w"> </span>umount<span class="w"> </span><span class="nv">$mount_dir</span>/proc
+</pre></div>
+</div>
+<p><strong>Unmount the image directory</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>umount<span class="w"> </span><span class="nv">$mount_dir</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="c-references">
+<h3>2.c References<a class="headerlink" href="#c-references" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>https://www.collabora.com/news-and-blog/blog/2017/01/16/setting-up-qemu-kvm-for-kernel-development/</p></li>
+<li><p>https://medium.com/&#64;daeseok.youn/prepare-the-environment-for-developing-linux-kernel-with-qemu-c55e37ba8ade</p></li>
+</ul>
+</section>
+</section>
+<section id="choice-3-commercial-virtual-machine-tools">
+<h2>Choice 3: Commercial Virtual Machine Tools<a class="headerlink" href="#choice-3-commercial-virtual-machine-tools" title="Link to this heading"></a></h2>
+<p>Though you are recommended to use <code class="docutils literal notranslate"><span class="pre">libvirt</span></code> or QEMU to run the virtual machine,
+here are some references for using commerical tools. These can potentially be
+helpful if you wish to test nested virtualizaiton.</p>
+<section id="vmware">
+<h3>VMware<a class="headerlink" href="#vmware" title="Link to this heading"></a></h3>
+<p>VMware Workstation Pro and VMware Fusion Pro are not free, but they are considered
+fast and easy to use. Some external resources (not tested by us) are available
+for setting up a Linux VM on VMware:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://w4118.github.io/guides/vm-setup.html">Ubuntu</a></p></li>
+<li><p><a class="reference external" href="https://cs4118.github.io/dev-guides/debian-vm-setup.html">Debian</a>
+Instructions for recompiling the kernel and booting it on VMware is available
+<a class="reference external" href="https://cs4118.github.io/dev-guides/debian-kernel-compilation.html">here</a></p></li>
+</ul>
+<p>Credit: COMS4118 Operating Systems I, Columbia University</p>
+</section>
+<section id="virtualbox">
+<h3>VirtualBox<a class="headerlink" href="#virtualbox" title="Link to this heading"></a></h3>
+<p>VirtualBox is free of charge. Some resources for using them:</p>
+<ul class="simple">
+<li><p>https://linuxize.com/post/how-to-install-virtualbox-guest-additions-on-debian-10/</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Intro" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="Boot-VM-Stock-Kernel.html" class="btn btn-neutral float-right" title="Boot Virtual Machine with Stock Kernel" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, OrderLab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

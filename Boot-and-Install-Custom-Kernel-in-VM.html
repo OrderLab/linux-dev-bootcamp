@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boot and Install Custom Kernel in VM &mdash; OrderLab Linux Development Guide v1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5cb08e4e"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Configure VM Networking" href="VM-Networking.html" />
+    <link rel="prev" title="Build Custom Kernel" href="Build-Custom-Kernel.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            OrderLab Linux Development Guide
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Chapters:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="Virtual-Machine-Setup.html">Virtual Machine Setup</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Boot-VM-Stock-Kernel.html">Boot Virtual Machine with Stock Kernel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Build-Custom-Kernel.html">Build Custom Kernel</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Boot and Install Custom Kernel in VM</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#boot-custom-kernel">1. Boot Custom Kernel</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#qemu">QEMU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#direct-kernel-boot-under-libvirt">Direct kernel boot under <code class="docutils literal notranslate"><span class="pre">libvirt</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#enable-kvm-with-qemu-command">Enable KVM (with QEMU command)</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#install-custom-kernel">2. Install Custom Kernel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#change-grub-entry">3. Change grub entry</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="VM-Networking.html">Configure VM Networking</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Modify-Kernel.html">Modify Kernel</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Debugging.html">Debugging</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Automation.html">Automation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Troubleshooting.html">Troubleshooting</a></li>
+<li class="toctree-l1"><a class="reference internal" href="Profiling.html">Performance Profiling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="References.html">References</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">OrderLab Linux Development Guide</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Boot and Install Custom Kernel in VM</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/OrderLab/linux-dev-bootcamp/blob/master/wiki/source/Boot-and-Install-Custom-Kernel-in-VM.md" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="boot-and-install-custom-kernel-in-vm">
+<h1>Boot and Install Custom Kernel in VM<a class="headerlink" href="#boot-and-install-custom-kernel-in-vm" title="Link to this heading"></a></h1>
+<section id="boot-custom-kernel">
+<h2>1. Boot Custom Kernel<a class="headerlink" href="#boot-custom-kernel" title="Link to this heading"></a></h2>
+<section id="qemu">
+<h3>QEMU<a class="headerlink" href="#qemu" title="Link to this heading"></a></h3>
+<p>If using raw QEMU to boot the VM image with the custom kernel, you can specify the <code class="docutils literal notranslate"><span class="pre">-kernel</span></code> command argument to point to the custom kernel image:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>linux-5.4.86
+qemu-system-x86_64<span class="w"> </span>-kernel<span class="w"> </span>arch/x86/boot/bzImage<span class="w">  </span>-hda<span class="w"> </span>../my-linux.img<span class="w"> </span><span class="se">\</span>
+-append<span class="w"> </span><span class="s2">&quot;root=/dev/sda console=ttyS0&quot;</span><span class="w"> </span>-m<span class="w"> </span>4G<span class="w"> </span>--nographic
+</pre></div>
+</div>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>Debian<span class="w"> </span>GNU/Linux<span class="w"> </span><span class="m">10</span><span class="w"> </span>razor5<span class="w"> </span>ttyS0
+<span class="w"> </span>
+razor5<span class="w"> </span>login:<span class="w"> </span>root
+Password:<span class="w"> </span>
+Linux<span class="w"> </span>razor5<span class="w"> </span><span class="m">5</span>.4.86<span class="w"> </span><span class="c1">#1 SMP Mon Jan 4 12:34:19 EST 2021 x86_64</span>
+<span class="w"> </span>
+The<span class="w"> </span>programs<span class="w"> </span>included<span class="w"> </span>with<span class="w"> </span>the<span class="w"> </span>Debian<span class="w"> </span>GNU/Linux<span class="w"> </span>system<span class="w"> </span>are<span class="w"> </span>free<span class="w"> </span>software<span class="p">;</span>
+the<span class="w"> </span>exact<span class="w"> </span>distribution<span class="w"> </span>terms<span class="w"> </span><span class="k">for</span><span class="w"> </span>each<span class="w"> </span>program<span class="w"> </span>are<span class="w"> </span>described<span class="w"> </span><span class="k">in</span><span class="w"> </span>the
+individual<span class="w"> </span>files<span class="w"> </span><span class="k">in</span><span class="w"> </span>/usr/share/doc/*/copyright.
+<span class="w"> </span>
+Debian<span class="w"> </span>GNU/Linux<span class="w"> </span>comes<span class="w"> </span>with<span class="w"> </span>ABSOLUTELY<span class="w"> </span>NO<span class="w"> </span>WARRANTY,<span class="w"> </span>to<span class="w"> </span>the<span class="w"> </span>extent
+permitted<span class="w"> </span>by<span class="w"> </span>applicable<span class="w"> </span>law.
+root@razor5:~#<span class="w"> </span>
+</pre></div>
+</div>
+</section>
+<section id="direct-kernel-boot-under-libvirt">
+<h3>Direct kernel boot under <code class="docutils literal notranslate"><span class="pre">libvirt</span></code><a class="headerlink" href="#direct-kernel-boot-under-libvirt" title="Link to this heading"></a></h3>
+<p>When using <code class="docutils literal notranslate"><span class="pre">libvirt</span></code> to manage the VM, the VM by default boots with the virtual disk’s kernel. Testing an updated kernel involves <code class="docutils literal notranslate"><span class="pre">scp</span></code> or sharing the kernel image to the VM and installing the kernel in the guest. For frequently testing kernel changes, a more efficient way is to
+use the direct kernel boot option with the kernel image file on the host.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>virsh<span class="w"> </span>edit<span class="w"> </span>obiwan-dev
+</pre></div>
+</div>
+<p>Change the <code class="docutils literal notranslate"><span class="pre">&lt;os&gt;</span></code> tag to be like the following:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="w">  </span>&lt;os&gt;
+<span class="w">    </span>&lt;<span class="nb">type</span><span class="w"> </span><span class="nv">arch</span><span class="o">=</span><span class="s1">&#39;x86_64&#39;</span><span class="w"> </span><span class="nv">machine</span><span class="o">=</span><span class="s1">&#39;pc-i440fx-bionic&#39;</span>&gt;hvm&lt;/type&gt;
+<span class="w">    </span>&lt;kernel&gt;/path/to/kernel/arch/x86/boot/bzImage&lt;/kernel&gt;
+<span class="w">    </span>&lt;cmdline&gt;console<span class="o">=</span>ttyS0<span class="w"> </span><span class="nv">root</span><span class="o">=</span>/dev/vda1<span class="w"> </span>rw&lt;/cmdline&gt;
+<span class="w">    </span>&lt;boot<span class="w"> </span><span class="nv">dev</span><span class="o">=</span><span class="s1">&#39;hd&#39;</span>/&gt;
+<span class="w">  </span>&lt;/os&gt;
+</pre></div>
+</div>
+<p>Then later with <code class="docutils literal notranslate"><span class="pre">virsh</span> <span class="pre">start</span> <span class="pre">obiwan-dev</span></code>, the VM will always boot with the latest <code class="docutils literal notranslate"><span class="pre">bzImage</span></code> compiled in the host.</p>
+</section>
+<section id="enable-kvm-with-qemu-command">
+<h3>Enable KVM (with QEMU command)<a class="headerlink" href="#enable-kvm-with-qemu-command" title="Link to this heading"></a></h3>
+<p>KVM can significantly accelerate the boot time. <code class="docutils literal notranslate"><span class="pre">libvirt</span></code> probes the presence of KVM and enables it in the VM profile if it’s available. Thus,  no additional configuration needs to be done. For raw QEMU, you need to add the <code class="docutils literal notranslate"><span class="pre">--enable-kvm</span></code> option:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>qemu-system-x86_64<span class="w"> </span>-kernel<span class="w"> </span>arch/x86/boot/bzImage<span class="w">  </span>-hda<span class="w"> </span>../my-linux.img<span class="w"> </span><span class="se">\</span>
+-append<span class="w"> </span><span class="s2">&quot;root=/dev/sda console=ttyS0&quot;</span><span class="w"> </span>--enable-kvm<span class="w"> </span>-m<span class="w"> </span>4G<span class="w"> </span>--nographic
+</pre></div>
+</div>
+<p>If you do not want to risk using <code class="docutils literal notranslate"><span class="pre">sudo</span></code> every time running QEMU, here is a way to run as normal user.</p>
+<p>KVM only requires access to <code class="docutils literal notranslate"><span class="pre">/dev/kvm</span></code>, which has owner <code class="docutils literal notranslate"><span class="pre">root:kvm</span></code> and file mode <code class="docutils literal notranslate"><span class="pre">660</span></code>. Add a normal user to the <code class="docutils literal notranslate"><span class="pre">kvm</span></code> group:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>usermod<span class="w"> </span>-a<span class="w"> </span>-G<span class="w"> </span>kvm<span class="w"> </span><span class="sb">`</span>whoami<span class="sb">`</span>
+</pre></div>
+</div>
+<p>User group modification takes effect after logging out and logging in again.</p>
+</section>
+</section>
+<section id="install-custom-kernel">
+<h2>2. Install Custom Kernel<a class="headerlink" href="#install-custom-kernel" title="Link to this heading"></a></h2>
+<p>It is recommended to install the custom kernel into the VM at least once as well. To do that, you need to build the kernel into <a class="reference external" href="https://github.com/OrderLab/linux-dev-bootcamp/wiki/Build-Custom-Kernel#package">distribution packages</a>. Then copy the package files into the VM either through shared folder or scp.</p>
+<p>Once in the VM, install the package files:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>sudo<span class="w"> </span>dpkg<span class="w"> </span>-i<span class="w"> </span>linux-headers-5.4.0_5.4.0-1_amd64.deb
+sudo<span class="w"> </span>dpkg<span class="w"> </span>-i<span class="w"> </span>linux-image-5.4.0_5.4.0-1_amd64.deb
+sudo<span class="w"> </span>dpkg<span class="w"> </span>-i<span class="w"> </span>linux-libc-dev_5.4.0-1_amd64.deb
+</pre></div>
+</div>
+<p>Note: there might be a .deb package for a debug image, e.g., <code class="docutils literal notranslate"><span class="pre">linux-image-5.4.0-dbg_5.4.0-1_amd64.deb</span></code>, which is quite big. Do <em>NOT</em> install that package.</p>
+<p>Reboot the VM. Now without specifying the custom kernel in the boot option, you should still see the new kernel version:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>uname<span class="w"> </span>-a
+</pre></div>
+</div>
+<p>Note after you install the custom kernel, you will likely encounter a loss of VM network after you reboot the VM. Refer to the <a class="reference external" href="https://github.com/OrderLab/linux-dev-bootcamp/wiki/Troubleshooting#loss-of-vm-network-after-installing-new-kernel">troubleshooting page</a> for how to resolve the issue.</p>
+</section>
+<section id="change-grub-entry">
+<h2>3. Change grub entry<a class="headerlink" href="#change-grub-entry" title="Link to this heading"></a></h2>
+<p>To automatically select the custom kernel during booting:</p>
+<ol class="arabic simple">
+<li><p>Find the custom kernel menu entry:</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">grep</span> <span class="o">-</span><span class="n">e</span> <span class="s2">&quot;menuentry &quot;</span> <span class="o">-</span><span class="n">e</span> <span class="n">submenu</span> <span class="o">-</span><span class="n">e</span> <span class="n">linux</span> <span class="o">/</span><span class="n">boot</span><span class="o">/</span><span class="n">grub</span><span class="o">/</span><span class="n">grub</span><span class="o">.</span><span class="n">cfg</span>
+</pre></div>
+</div>
+<p>For example, if the output is</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>...
+submenu<span class="w"> </span><span class="s1">&#39;Advanced options for Ubuntu&#39;</span><span class="w"> </span><span class="nv">$menuentry_id_option</span><span class="w"> </span><span class="s1">&#39;gnulinux-advanced-8b9e1980-828f-418f-ae44-80689ca8bd2f&#39;</span><span class="w"> </span><span class="o">{</span>
+<span class="w">	</span>menuentry<span class="w"> </span><span class="s1">&#39;Ubuntu, with Linux 5.4.0-100-generic&#39;</span><span class="w"> </span>--class<span class="w"> </span>ubuntu<span class="w"> </span>--class<span class="w"> </span>gnu-linux<span class="w"> </span>--class<span class="w"> </span>gnu<span class="w"> </span>--class<span class="w"> </span>os<span class="w"> </span><span class="nv">$menuentry_id_option</span><span class="w"> </span><span class="s1">&#39;gnulinux-5.4.0-100-generic-advanced-8b9e1980-828f-418f-ae44-80689ca8bd2f&#39;</span><span class="w"> </span><span class="o">{</span>
+<span class="w">		</span>gfxmode<span class="w"> </span><span class="nv">$linux_gfx_mode</span>
+<span class="w">		</span>linux<span class="w">	</span>/boot/vmlinuz-5.4.0-100-generic<span class="w"> </span><span class="nv">root</span><span class="o">=</span><span class="nv">UUID</span><span class="o">=</span>8b9e1980-828f-418f-ae44-80689ca8bd2f<span class="w"> </span>ro<span class="w"> </span><span class="nv">console</span><span class="o">=</span>ttyS1,115200
+<span class="w">	</span>menuentry<span class="w"> </span><span class="s1">&#39;Ubuntu, with Linux 5.4.0-100-generic (recovery mode)&#39;</span><span class="w"> </span>--class<span class="w"> </span>ubuntu<span class="w"> </span>--class<span class="w"> </span>gnu-linux<span class="w"> </span>--class<span class="w"> </span>gnu<span class="w"> </span>--class<span class="w"> </span>os<span class="w"> </span><span class="nv">$menuentry_id_option</span><span class="w"> </span><span class="s1">&#39;gnulinux-5.4.0-100-generic-recovery-8b9e1980-828f-418f-ae44-80689ca8bd2f&#39;</span><span class="w"> </span><span class="o">{</span>
+<span class="w">		</span>linux<span class="w">	</span>/boot/vmlinuz-5.4.0-100-generic<span class="w"> </span><span class="nv">root</span><span class="o">=</span><span class="nv">UUID</span><span class="o">=</span>8b9e1980-828f-418f-ae44-80689ca8bd2f<span class="w"> </span>ro<span class="w"> </span>recovery<span class="w"> </span>nomodeset<span class="w"> </span>dis_ucode_ldr<span class="w"> </span><span class="nv">console</span><span class="o">=</span>ttyS1,115200
+<span class="w">	</span>menuentry<span class="w"> </span><span class="s1">&#39;Ubuntu, with Linux 5.4.0&#39;</span><span class="w"> </span>--class<span class="w"> </span>ubuntu<span class="w"> </span>--class<span class="w"> </span>gnu-linux<span class="w"> </span>--class<span class="w"> </span>gnu<span class="w"> </span>--class<span class="w"> </span>os<span class="w"> </span><span class="nv">$menuentry_id_option</span><span class="w"> </span><span class="s1">&#39;gnulinux-5.4.0-advanced-8b9e1980-828f-418f-ae44-80689ca8bd2f&#39;</span><span class="w"> </span><span class="o">{</span>
+<span class="w">		</span>gfxmode<span class="w"> </span><span class="nv">$linux_gfx_mode</span>
+<span class="w">		</span>linux<span class="w">	</span>/boot/vmlinuz-5.4.0<span class="w"> </span><span class="nv">root</span><span class="o">=</span><span class="nv">UUID</span><span class="o">=</span>8b9e1980-828f-418f-ae44-80689ca8bd2f<span class="w"> </span>ro<span class="w"> </span><span class="nv">console</span><span class="o">=</span>ttyS1,115200
+<span class="w">	</span>menuentry<span class="w"> </span><span class="s1">&#39;Ubuntu, with Linux 5.4.0 (recovery mode)&#39;</span><span class="w"> </span>--class<span class="w"> </span>ubuntu<span class="w"> </span>--class<span class="w"> </span>gnu-linux<span class="w"> </span>--class<span class="w"> </span>gnu<span class="w"> </span>--class<span class="w"> </span>os<span class="w"> </span><span class="nv">$menuentry_id_option</span><span class="w"> </span><span class="s1">&#39;gnulinux-5.4.0-recovery-8b9e1980-828f-418f-ae44-80689ca8bd2f&#39;</span><span class="w"> </span><span class="o">{</span>
+<span class="w">		</span>linux<span class="w">	</span>/boot/vmlinuz-5.4.0<span class="w"> </span><span class="nv">root</span><span class="o">=</span><span class="nv">UUID</span><span class="o">=</span>8b9e1980-828f-418f-ae44-80689ca8bd2f<span class="w"> </span>ro<span class="w"> </span>recovery<span class="w"> </span>nomodeset<span class="w"> </span>dis_ucode_ldr<span class="w"> </span>
+...
+</pre></div>
+</div>
+<p>Assume our custom kernel is ‘Ubuntu, with Linux 5.4.0’, which is the 3rd <code class="docutils literal notranslate"><span class="pre">menuentry</span></code> under the <code class="docutils literal notranslate"><span class="pre">submenu</span></code>.</p>
+<ol class="arabic simple" start="2">
+<li><p>Change the <code class="docutils literal notranslate"><span class="pre">GRUB_DEFAULT=0</span></code> line in the <code class="docutils literal notranslate"><span class="pre">/etc/default/grub</span></code> file. If the custom kernel is the <code class="docutils literal notranslate"><span class="pre">Nth</span></code> <code class="docutils literal notranslate"><span class="pre">menuentry</span></code> under <code class="docutils literal notranslate"><span class="pre">submenu</span></code>, change it to <code class="docutils literal notranslate"><span class="pre">GRUB_DEFAULT=&quot;1&gt;$N-1$&quot;</span></code>. For example, for a 3rd <code class="docutils literal notranslate"><span class="pre">menuentry</span></code>, change it to <code class="docutils literal notranslate"><span class="pre">GRUB_DEFAULT=&quot;1&gt;2&quot;</span></code>.</p></li>
+<li><p>Update grub script and reboot:</p></li>
+</ol>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sudo</span> <span class="n">update</span><span class="o">-</span><span class="n">grub</span>
+
+<span class="n">sudo</span> <span class="n">reboot</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="Build-Custom-Kernel.html" class="btn btn-neutral float-left" title="Build Custom Kernel" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="VM-Networking.html" class="btn btn-neutral float-right" title="Configure VM Networking" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, OrderLab.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
